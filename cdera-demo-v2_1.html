@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDERA – System Demo v2</title>
+<style>
+  :root {
+    --bg:#f0f4f8;--surface:#ffffff;--surface2:#f8fafc;--border:#e2e8f0;
+    --navy:#1e3a5f;--blue:#2563eb;--blue-lt:#dbeafe;
+    --teal:#0891b2;--teal-lt:#cffafe;--green:#16a34a;--green-lt:#dcfce7;
+    --amber:#d97706;--amber-lt:#fef3c7;--red:#dc2626;--red-lt:#fee2e2;
+    --purple:#7c3aed;--purple-lt:#ede9fe;--slate:#475569;--slate-lt:#94a3b8;
+    --text:#1e293b;--text-muted:#64748b;--code-bg:#1e293b;--code-text:#e2e8f0;
+  }
+  @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#0f172a;--surface:#1e293b;--surface2:#162032;--border:#334155;
+    --navy:#93c5fd;--blue:#60a5fa;--blue-lt:#1e3a5f;
+    --teal:#22d3ee;--teal-lt:#164e63;--green:#4ade80;--green-lt:#14532d;
+    --amber:#fbbf24;--amber-lt:#78350f;--red:#f87171;--red-lt:#7f1d1d;
+    --purple:#a78bfa;--purple-lt:#4c1d95;--slate:#94a3b8;--slate-lt:#334155;
+    --text:#f1f5f9;--text-muted:#94a3b8;--code-bg:#0f172a;--code-text:#e2e8f0;
+  }}
+  :root[data-theme="dark"]{--bg:#0f172a;--surface:#1e293b;--surface2:#162032;--border:#334155;--navy:#93c5fd;--blue:#60a5fa;--blue-lt:#1e3a5f;--teal:#22d3ee;--teal-lt:#164e63;--green:#4ade80;--green-lt:#14532d;--amber:#fbbf24;--amber-lt:#78350f;--red:#f87171;--red-lt:#7f1d1d;--purple:#a78bfa;--purple-lt:#4c1d95;--slate:#94a3b8;--slate-lt:#334155;--text:#f1f5f9;--text-muted:#94a3b8;--code-bg:#0f172a;--code-text:#e2e8f0;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
+  .header{background:var(--navy);color:#fff;padding:12px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;}
+  .header-logo{font-size:20px;font-weight:800;letter-spacing:-0.5px;color:#fff;}
+  .header-logo span{color:#60a5fa;}
+  .header-sub{font-size:11px;color:#93c5fd;letter-spacing:0.5px;}
+  .header-spacer{flex:1;}
+  .theme-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;}
+  .layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 48px);}
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:16px 0;overflow-y:auto;}
+  .sidebar-section{padding:6px 16px 2px;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 16px;cursor:pointer;border-left:3px solid transparent;transition:all 0.15s;color:var(--text-muted);font-size:13px;}
+  .nav-item:hover{background:var(--surface2);color:var(--text);}
+  .nav-item.active{background:var(--blue-lt);color:var(--blue);border-left-color:var(--blue);font-weight:600;}
+  .nav-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .main{padding:24px;overflow-y:auto;max-height:calc(100vh - 48px);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px;}
+  .card-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+  .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+  .stat-value{font-size:26px;font-weight:800;line-height:1;color:var(--navy);font-variant-numeric:tabular-nums;}
+  .stat-label{font-size:11px;color:var(--text-muted);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;}
+  .stat-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:10px;margin-top:4px;}
+  .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;}
+  .badge-blue{background:var(--blue-lt);color:var(--blue);}
+  .badge-green{background:var(--green-lt);color:var(--green);}
+  .badge-amber{background:var(--amber-lt);color:var(--amber);}
+  .badge-red{background:var(--red-lt);color:var(--red);}
+  .badge-purple{background:var(--purple-lt);color:var(--purple);}
+  .badge-teal{background:var(--teal-lt);color:var(--teal);}
+  .badge-slate{background:var(--slate-lt);color:var(--slate);}
+  .fsm-states{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding:8px 0;}
+  .fsm-state{background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px 12px;font-size:11px;font-weight:600;text-align:center;white-space:nowrap;min-width:100px;color:var(--text-muted);transition:all 0.3s;}
+  .fsm-state.current{background:var(--blue-lt);border-color:var(--blue);color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.15);}
+  .fsm-state.done{background:var(--green-lt);border-color:var(--green);color:var(--green);}
+  .fsm-arrow{color:var(--slate-lt);padding:0 4px;font-size:18px;flex-shrink:0;}
+  .conf-bar-wrap{background:var(--border);border-radius:4px;height:12px;overflow:hidden;}
+  .conf-bar{height:100%;border-radius:4px;transition:width 0.6s ease;}
+  .conf-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px;}
+  .data-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .data-table th{background:var(--surface2);color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
+  .data-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top;}
+  .data-table tr:last-child td{border-bottom:none;}
+  .data-table tr:hover td{background:var(--surface2);}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;}
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-primary:hover{background:#1d4ed8;}
+  .btn-primary:disabled{background:var(--slate-lt);cursor:not-allowed;}
+  .btn-success{background:var(--green);color:#fff;}
+  .btn-success:hover{background:#15803d;}
+  .btn-danger{background:var(--red);color:#fff;}
+  .btn-danger:hover{background:#b91c1c;}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+  .btn-outline:hover{background:var(--surface2);}
+  .btn-sm{padding:4px 10px;font-size:11px;}
+  .form-group{margin-bottom:12px;}
+  .form-label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;}
+  .form-control{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;color:var(--text);}
+  .form-control:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,0.15);}
+  select.form-control{cursor:pointer;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+  .svc-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;}
+  .svc-name{font-size:12px;font-weight:700;color:var(--navy);}
+  .svc-port{font-size:10px;color:var(--text-muted);}
+  .svc-status{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:11px;}
+  .pulse{width:7px;height:7px;border-radius:50%;animation:pulse 2s infinite;}
+  .pulse-green{background:var(--green);box-shadow:0 0 0 0 rgba(22,163,74,0.4);}
+  .pulse-amber{background:var(--amber);box-shadow:0 0 0 0 rgba(217,119,6,0.4);}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,0.4);}50%{box-shadow:0 0 0 5px rgba(22,163,74,0);}}
+  .audit-entry{border-left:3px solid var(--border);padding:8px 12px;margin-bottom:8px;font-size:12px;}
+  .audit-entry.system{border-color:var(--blue);}
+  .audit-entry.human{border-color:var(--green);}
+  .audit-entry.ai{border-color:var(--purple);}
+  .audit-entry.intake{border-color:var(--teal);}
+  .audit-time{color:var(--text-muted);font-size:10px;font-variant-numeric:tabular-nums;}
+  .audit-hash{font-family:monospace;font-size:9px;color:var(--slate-lt);word-break:break-all;margin-top:2px;}
+  .step-list{list-style:none;}
+  .step-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .step-item:last-child{border-bottom:none;}
+  .step-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+  .step-pending{background:var(--surface2);border:2px solid var(--border);color:var(--text-muted);}
+  .step-done{background:var(--green);color:#fff;}
+  .step-active{background:var(--blue);color:#fff;animation:stepPulse 1.2s ease infinite;}
+  @keyframes stepPulse{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,0.4);}50%{box-shadow:0 0 0 5px rgba(37,99,235,0);}}
+  .step-content{flex:1;}
+  .step-title{font-weight:600;font-size:13px;}
+  .step-detail{font-size:11px;color:var(--text-muted);margin-top:2px;}
+  #toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;display:none;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+  .code-block{background:var(--code-bg);color:var(--code-text);border-radius:8px;padding:14px;font-family:"Courier New",monospace;font-size:11px;overflow-x:auto;line-height:1.6;}
+  .code-kw{color:#93c5fd;}.code-str{color:#6ee7b7;}.code-num{color:#fca5a5;}.code-cmt{color:#64748b;}
+  .info-row{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);}
+  .info-key{font-size:11px;font-weight:600;color:var(--text-muted);width:150px;flex-shrink:0;text-transform:uppercase;letter-spacing:0.3px;}
+  .info-val{font-size:12px;color:var(--text);}
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .section-title{font-size:18px;font-weight:800;color:var(--navy);}
+  .section-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+  .queue-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;}
+  .queue-priority{width:4px;height:40px;border-radius:2px;flex-shrink:0;}
+  .queue-info{flex:1;}
+  .queue-id{font-size:12px;font-weight:700;}
+  .queue-meta{font-size:11px;color:var(--text-muted);margin-top:2px;}
+  .queue-actions{display:flex;gap:6px;}
+  .tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;}
+  .tab{padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;}
+  .tab:hover{color:var(--text);}
+  .tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--surface);border-radius:12px;padding:24px;width:480px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+  .modal-title{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:16px;}
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+  /* Channel cards */
+  .channel-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:6px;}
+  .channel-name{font-size:13px;font-weight:700;color:var(--navy);}
+  .channel-meta{font-size:11px;color:var(--text-muted);}
+  .channel-bar-wrap{background:var(--border);border-radius:3px;height:6px;overflow:hidden;margin-top:4px;}
+  .channel-bar{height:100%;border-radius:3px;}
+  /* Email preview */
+  .email-preview{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:"Courier New",monospace;font-size:11px;line-height:1.7;margin-bottom:12px;}
+  .email-header{color:var(--text-muted);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px;}
+  .email-body{color:var(--text);}
+  /* GPU meter */
+  .gpu-bar-wrap{background:var(--border);border-radius:4px;height:14px;overflow:hidden;flex:1;}
+  .gpu-bar{height:100%;border-radius:4px;transition:width 1s ease;}
+  /* PII scrub */
+  .pii-row{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+  .pii-field{width:140px;flex-shrink:0;font-weight:600;}
+  .pii-orig{flex:1;font-family:monospace;color:var(--text-muted);}
+  .pii-mask{flex:1;font-family:monospace;color:var(--green);}
+  /* Notification timeline */
+  .notif-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .notif-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .notif-body{flex:1;}
+  .notif-title{font-size:13px;font-weight:600;}
+  .notif-meta{font-size:11px;color:var(--text-muted);margin-top:2px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="header-logo">C<span>D</span>ERA</div>
+    <div class="header-sub">Card Dispute Evidence Reconstruction &amp; Resolution Agent · v2 · On-Prem SLM Edition</div>
+  </div>
+  <div class="header-spacer"></div>
+  <span class="badge badge-green" style="font-size:11px;">● All Systems Operational</span>
+  &nbsp;
+  <button class="theme-btn" onclick="toggleTheme()">🌗 Theme</button>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">Dashboard</div>
+    <div class="nav-item active" onclick="showPanel('dashboard',this)"><div class="nav-dot" style="background:var(--blue)"></div> Overview</div>
+    <div class="nav-item" onclick="showPanel('services',this)"><div class="nav-dot" style="background:var(--teal)"></div> Microservices</div>
+
+    <div class="sidebar-section" style="margin-top:8px">Intake Channels</div>
+    <div class="nav-item" onclick="showPanel('channels',this)"><div class="nav-dot" style="background:var(--teal)"></div> Channel Gateway</div>
+    <div class="nav-item" onclick="showPanel('email-intake',this)"><div class="nav-dot" style="background:var(--teal)"></div> Email Parser</div>
+
+    <div class="sidebar-section" style="margin-top:8px">Dispute Flow</div>
+    <div class="nav-item" onclick="showPanel('new-dispute',this)"><div class="nav-dot" style="background:var(--green)"></div> New Dispute</div>
+    <div class="nav-item" onclick="showPanel('evidence',this)"><div class="nav-dot" style="background:var(--amber)"></div> Evidence Ingestion</div>
+    <div class="nav-item" onclick="showPanel('ai-analysis',this)"><div class="nav-dot" style="background:var(--purple)"></div> AI Analysis (SLM)</div>
+    <div class="nav-item" onclick="showPanel('hitl',this)"><div class="nav-dot" style="background:var(--red)"></div> Human Review Queue</div>
+    <div class="nav-item" onclick="showPanel('resolution',this)"><div class="nav-dot" style="background:var(--green)"></div> Resolution</div>
+
+    <div class="sidebar-section" style="margin-top:8px">SLM Governance</div>
+    <div class="nav-item" onclick="showPanel('slm-health',this)"><div class="nav-dot" style="background:var(--purple)"></div> Model Health</div>
+    <div class="nav-item" onclick="showPanel('pii-scrub',this)"><div class="nav-dot" style="background:var(--amber)"></div> PII Scrub Log</div>
+    <div class="nav-item" onclick="showPanel('notifications',this)"><div class="nav-dot" style="background:var(--blue)"></div> Notifications</div>
+
+    <div class="sidebar-section" style="margin-top:8px">Observability</div>
+    <div class="nav-item" onclick="showPanel('audit',this)"><div class="nav-dot" style="background:var(--slate)"></div> Audit Trail</div>
+    <div class="nav-item" onclick="showPanel('fsm',this)"><div class="nav-dot" style="background:var(--blue)"></div> FSM Visualiser</div>
+  </nav>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div id="panel-dashboard" class="panel active">
+      <div class="section-header">
+        <div><div class="section-title">Operations Dashboard</div><div class="section-sub">Real-time dispute resolution metrics — VITA Solutions</div></div>
+        <button class="btn btn-outline btn-sm" onclick="refreshMetrics()">↻ Refresh</button>
+      </div>
+      <div class="card-grid" style="margin-bottom:16px">
+        <div class="stat-card"><div class="stat-value" id="stat-total">247</div><div class="stat-label">Active Disputes</div><div class="stat-badge badge badge-blue">+12 today</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-stp" style="color:var(--green)">68%</div><div class="stat-label">STP Rate (Auto-Resolved)</div><div class="stat-badge badge badge-green">↑ 3% vs last week</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-pending" style="color:var(--amber)">43</div><div class="stat-label">Pending Human Review</div><div class="stat-badge badge badge-amber">2 SLA breach risk</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-conf" style="color:var(--purple)">0.87</div><div class="stat-label">Avg AI Confidence</div><div class="stat-badge badge badge-purple">Beta posterior · Phi-4 14B</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="card">
+          <div class="card-title">📊 Resolution Pipeline</div>
+          <div style="margin-bottom:10px"><div class="conf-label"><span>STP Auto-Resolved (&gt;0.90)</span><span>168</span></div><div class="conf-bar-wrap"><div class="conf-bar" style="width:68%;background:var(--green)"></div></div></div>
+          <div style="margin-bottom:10px"><div class="conf-label"><span>Analyst Queue (0.75–0.90)</span><span>51</span></div><div class="conf-bar-wrap"><div class="conf-bar" style="width:21%;background:var(--blue)"></div></div></div>
+          <div style="margin-bottom:10px"><div class="conf-label"><span>Manager Queue (0.50–0.75)</span><span>19</span></div><div class="conf-bar-wrap"><div class="conf-bar" style="width:8%;background:var(--amber)"></div></div></div>
+          <div><div class="conf-label"><span>Mandatory Escalation (&lt;0.50)</span><span>9</span></div><div class="conf-bar-wrap"><div class="conf-bar" style="width:3%;background:var(--red)"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📥 Today's Intake by Channel</div>
+          <div style="margin-bottom:8px"><div class="conf-label"><span>📱 Mobile App (42%)</span><span>50</span></div><div class="conf-bar-wrap"><div class="conf-bar" style="width:42%;background:var(--blue)"></div></div></div>
+          <div style="margin-bottom:8px"><div class="conf-label"><span>📧 Email Parser (34%)</span><span>41</span></div><div class="conf-bar-wrap"><div class="conf-bar" style="width:34%;background:var(--teal)"></div></div></div>
+          <div style="margin-bottom:8px"><div class="conf-label"><span>🌐 Merchant Portal API (12%)</span><span>14</span></div><div class="conf-bar-wrap"><div class="conf-bar" style="width:12%;background:var(--green)"></div></div></div>
+          <div style="margin-bottom:8px"><div class="conf-label"><span>📞 IVR / Branch (8%)</span><span>10</span></div><div class="conf-bar-wrap"><div class="conf-bar" style="width:8%;background:var(--amber)"></div></div></div>
+          <div><div class="conf-label"><span>🏦 Card Network (Visa/MC) (4%)</span><span>5</span></div><div class="conf-bar-wrap"><div class="conf-bar" style="width:4%;background:var(--purple)"></div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🗂 Dispute Types Today</div>
+        <table class="data-table">
+          <thead><tr><th>Type</th><th>Count</th><th>Avg Confidence</th><th>Primary Channel</th></tr></thead>
+          <tbody>
+            <tr><td>UNAUTHORISED_TXN</td><td>89</td><td><span class="badge badge-green">0.91</span></td><td><span class="badge badge-blue">Mobile App</span></td></tr>
+            <tr><td>MERCHANT_FRAUD</td><td>67</td><td><span class="badge badge-green">0.88</span></td><td><span class="badge badge-teal">Email</span></td></tr>
+            <tr><td>DUPLICATE_CHARGE</td><td>45</td><td><span class="badge badge-blue">0.79</span></td><td><span class="badge badge-teal">Email</span></td></tr>
+            <tr><td>GOODS_NOT_RECEIVED</td><td>31</td><td><span class="badge badge-amber">0.71</span></td><td><span class="badge badge-green">Merchant Portal</span></td></tr>
+            <tr><td>FX_DISPUTE</td><td>15</td><td><span class="badge badge-amber">0.66</span></td><td><span class="badge badge-purple">Card Network</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MICROSERVICES -->
+    <div id="panel-services" class="panel">
+      <div class="section-header"><div><div class="section-title">Microservice Health</div><div class="section-sub">13 services across 3 SQLite database clusters + 2 GPU inference servers</div></div></div>
+      <div class="svc-grid" id="svc-grid"></div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">⚡ LiteLLM On-Prem SLM Routing Chain</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div style="background:var(--green-lt);border:2px solid var(--green);color:var(--green);border-radius:7px;padding:8px 14px;font-weight:700;font-size:12px">1. vLLM + Phi-4 14B<br><span style="font-weight:400;font-size:10px">PRIMARY ● ACTIVE · INT8 · A100</span></div>
+          <div style="color:var(--text-muted);font-size:20px">→</div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 14px;font-size:12px">2. Ollama + Mistral-7B<br><span style="font-size:10px;color:var(--text-muted)">FALLBACK 1 ● STANDBY · INT4 · RTX 3090</span></div>
+          <div style="color:var(--text-muted);font-size:20px">→</div>
+          <div style="background:var(--red-lt);border:1px solid var(--red);border-radius:7px;padding:8px 14px;font-size:12px;color:var(--red)">3. Cloud LLM (PII-Stripped)<br><span style="font-size:10px">LAST RESORT ● DISABLED · CISO approval req'd</span></div>
+        </div>
+        <div style="margin-top:10px;background:var(--amber-lt);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--amber)">
+          ⚠ <strong>Regulatory:</strong> Cloud LLM disabled by default. Enabling requires CISO written approval + DPA with provider + pii_scrub_log verification. Every cloud call written to audit_log with actor_id='CLOUD_LLM_FALLBACK'.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔴 Circuit Breaker Status</div>
+        <table class="data-table">
+          <thead><tr><th>Service</th><th>State</th><th>Failure Rate (60s)</th><th>Cooldown</th></tr></thead>
+          <tbody>
+            <tr><td>vLLM Server (Phi-4 14B)</td><td><span class="badge badge-green">CLOSED</span></td><td>0%</td><td>—</td></tr>
+            <tr><td>Ollama Server (Mistral-7B)</td><td><span class="badge badge-green">CLOSED</span></td><td>1%</td><td>—</td></tr>
+            <tr><td>Presidio PII Scrubber</td><td><span class="badge badge-green">CLOSED</span></td><td>0%</td><td>—</td></tr>
+            <tr><td>Evidence Ingestion API</td><td><span class="badge badge-green">CLOSED</span></td><td>1%</td><td>—</td></tr>
+            <tr><td>FX Rate Provider</td><td><span class="badge badge-amber">HALF-OPEN</span></td><td>48%</td><td>12s remaining</td></tr>
+            <tr><td>Cloud LLM (last resort)</td><td><span class="badge badge-slate">DISABLED</span></td><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CHANNEL GATEWAY -->
+    <div id="panel-channels" class="panel">
+      <div class="section-header"><div><div class="section-title">Channel Gateway</div><div class="section-sub">Dispute Intake Service · All channels route to POST /api/v1/disputes with channel_source tag</div></div></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px">
+        <div class="channel-card">
+          <div style="font-size:24px">📱</div>
+          <div class="channel-name">Mobile App Push</div>
+          <div class="channel-meta">42% of intake · 100% structured JSON · Real-time webhook</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div class="channel-bar-wrap"><div class="channel-bar" style="width:42%;background:var(--blue)"></div></div>
+            <span class="badge badge-green">LIVE</span>
+          </div>
+          <div class="channel-meta" style="margin-top:4px">Avg parse time: &lt;50ms · Auto-case rate: 100%</div>
+        </div>
+        <div class="channel-card">
+          <div style="font-size:24px">📧</div>
+          <div class="channel-name">Email Parser (IMAP)</div>
+          <div class="channel-meta">34% of intake · NLP extraction · disputes@bank.com</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div class="channel-bar-wrap"><div class="channel-bar" style="width:34%;background:var(--teal)"></div></div>
+            <span class="badge badge-green">LIVE</span>
+          </div>
+          <div class="channel-meta" style="margin-top:4px">Avg parse time: 800ms · Auto-case rate: 87%</div>
+        </div>
+        <div class="channel-card">
+          <div style="font-size:24px">🌐</div>
+          <div class="channel-name">Merchant Portal API</div>
+          <div class="channel-meta">12% of intake · REST API · Merchant-initiated chargebacks</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div class="channel-bar-wrap"><div class="channel-bar" style="width:12%;background:var(--green)"></div></div>
+            <span class="badge badge-green">LIVE</span>
+          </div>
+          <div class="channel-meta" style="margin-top:4px">Avg parse time: &lt;100ms · Auto-case rate: 100%</div>
+        </div>
+        <div class="channel-card">
+          <div style="font-size:24px">📞</div>
+          <div class="channel-name">IVR / Call Centre</div>
+          <div class="channel-meta">8% of intake · Agent-assisted entry via CRM screen-pop</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div class="channel-bar-wrap"><div class="channel-bar" style="width:8%;background:var(--amber)"></div></div>
+            <span class="badge badge-amber">SEMI-AUTO</span>
+          </div>
+          <div class="channel-meta" style="margin-top:4px">Agent entry: ~3 min · Auto-pre-fill from CLI: 60%</div>
+        </div>
+        <div class="channel-card">
+          <div style="font-size:24px">🏦</div>
+          <div class="channel-name">Card Network (Visa DRE / MC)</div>
+          <div class="channel-meta">4% of intake · Inbound chargeback notifications from Visa/MC</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div class="channel-bar-wrap"><div class="channel-bar" style="width:4%;background:var(--purple)"></div></div>
+            <span class="badge badge-green">LIVE</span>
+          </div>
+          <div class="channel-meta" style="margin-top:4px">Avg parse time: &lt;200ms · Auto-case rate: 100%</div>
+        </div>
+        <div class="channel-card">
+          <div style="font-size:24px">🏛</div>
+          <div class="channel-name">Web Portal / Branch</div>
+          <div class="channel-meta">&lt;1% of intake · Manual form · Legacy fallback only</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div class="channel-bar-wrap"><div class="channel-bar" style="width:1%;background:var(--slate)"></div></div>
+            <span class="badge badge-slate">MANUAL</span>
+          </div>
+          <div class="channel-meta" style="margin-top:4px">Branch staff entry · No auto-parse</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔄 Channel Normalisation Pipeline</div>
+        <table class="data-table">
+          <thead><tr><th>Step</th><th>Component</th><th>Action</th><th>Output</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Channel Listener</td><td>Receive raw payload (email/webhook/API/IVR transcript)</td><td>Raw message</td></tr>
+            <tr><td>2</td><td>NLP Extractor (Phi-4 14B)</td><td>Extract: dispute_type, amount, currency, merchant, txn_date, cardholder_id</td><td>Structured JSON</td></tr>
+            <tr><td>3</td><td>Presidio PII Scrubber</td><td>Mask PAN, CVV, phone, email before any storage</td><td>PII-scrubbed payload</td></tr>
+            <tr><td>4</td><td>Jurisdiction Engine</td><td>BIN lookup → derive jurisdiction + applicable rules</td><td>jurisdiction_code</td></tr>
+            <tr><td>5</td><td>Dispute Manager</td><td>POST /api/v1/disputes → create case, assign UUID, set SLA deadline</td><td>Case ID + RECEIVED state</td></tr>
+            <tr><td>6</td><td>Notification Service</td><td>Send acknowledgement to customer (email + push)</td><td>Notification sent</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EMAIL INTAKE SIMULATOR -->
+    <div id="panel-email-intake" class="panel">
+      <div class="section-header"><div><div class="section-title">Email Parser — Live Simulation</div><div class="section-sub">IMAP listener at disputes@bank.com · Phi-4 14B NLP extraction · Auto case creation</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="card-title">📧 Incoming Customer Email</div>
+          <div class="form-group">
+            <label class="form-label">Select sample email</label>
+            <select class="form-control" id="email-sample" onchange="loadEmailSample()">
+              <option value="unauthorized">Unauthorised Transaction (Cardholder)</option>
+              <option value="goods">Goods Not Received (Cardholder)</option>
+              <option value="merchant">Merchant Raises Chargeback</option>
+              <option value="fx">FX Rate Dispute</option>
+            </select>
+          </div>
+          <div class="email-preview" id="email-preview">
+            <div class="email-header">
+              <div><strong>From:</strong> <span id="em-from">sarah.johnson@gmail.com</span></div>
+              <div><strong>To:</strong> disputes@bank.com</div>
+              <div><strong>Subject:</strong> <span id="em-subject">Dispute - Unauthorized charge on my card</span></div>
+              <div><strong>Date:</strong> 29 Aug 2026 09:14 UTC</div>
+            </div>
+            <div class="email-body" id="em-body">Dear Disputes Team,
+
+I am writing to dispute an unauthorized transaction on my Visa card ending in 1111. On August 27, 2026, a charge of USD 450.00 appeared from AMAZON.COM (ref: AMZ-2847361) which I did not authorise.
+
+I have not made any purchase from Amazon on that date and believe my card details may have been compromised. Please investigate and refund the amount.
+
+My account number: 4111 1111 1111 1111
+Contact: +1-555-867-5309
+
+Regards,
+Sarah Johnson</div>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="parseEmail()">🤖 Parse with Phi-4 14B NLP</button>
+        </div>
+        <div class="card">
+          <div class="card-title">🧠 NLP Extraction Result</div>
+          <div id="parse-idle" style="color:var(--text-muted);font-size:13px;padding:20px 0;text-align:center">Click "Parse" to see NLP extraction and auto-case creation</div>
+          <div id="parse-result" style="display:none">
+            <div style="background:var(--purple-lt);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--purple);margin-bottom:12px">
+              🤖 <strong>Model:</strong> Phi-4 14B via vLLM · <strong>Latency:</strong> <span id="parse-latency">340ms</span> · <strong>Tokens:</strong> <span id="parse-tokens">287</span>
+            </div>
+            <div id="parse-fields"></div>
+            <div style="margin-top:12px;background:var(--amber-lt);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--amber)">
+              🛡 <strong>Presidio PII Scrubber ran before storage:</strong> PAN masked → 411111XXXXXX1111 · Phone masked → XXX-XXX-5309 · Email masked · CVV not present
+            </div>
+            <div id="parse-case-created" style="margin-top:12px;display:none">
+              <div style="background:var(--green-lt);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--green);font-weight:600">
+                ✅ Case auto-created: <span id="parse-case-id"></span><br>
+                <span style="font-weight:400">Status: RECEIVED · SLA: 45 days · Notification sent to customer</span>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" id="create-from-email-btn" onclick="createCaseFromEmail()">▶ Confirm &amp; Create Case</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW DISPUTE -->
+    <div id="panel-new-dispute" class="panel">
+      <div class="section-header"><div><div class="section-title">New Dispute Registration</div><div class="section-sub">Manual entry · For IVR / branch fallback — most cases arrive via channels automatically</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="card-title">📝 Case Details (Manual Entry)</div>
+          <div class="form-group"><label class="form-label">Dispute Type</label>
+            <select class="form-control" id="disp-type">
+              <option value="UNAUTHORISED_TXN">UNAUTHORISED_TXN</option>
+              <option value="MERCHANT_FRAUD">MERCHANT_FRAUD</option>
+              <option value="DUPLICATE_CHARGE">DUPLICATE_CHARGE</option>
+              <option value="GOODS_NOT_RECEIVED">GOODS_NOT_RECEIVED</option>
+              <option value="FX_DISPUTE">FX_DISPUTE</option>
+            </select></div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Amount</label><input class="form-control" id="disp-amount" type="number" value="450.00" step="0.01"></div>
+            <div class="form-group"><label class="form-label">Currency</label>
+              <select class="form-control" id="disp-currency"><option>USD</option><option>EUR</option><option>GBP</option><option>SGD</option><option>AED</option></select>
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">Channel</label>
+            <select class="form-control" id="disp-channel"><option>IVR</option><option>BRANCH</option><option>WEB_PORTAL</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Card BIN (first 6 digits)</label><input class="form-control" id="disp-bin" type="text" value="411111" maxlength="6"></div>
+          <div class="form-group"><label class="form-label">Merchant Name</label><input class="form-control" id="disp-merchant" type="text" value="AMAZON.COM"></div>
+          <button class="btn btn-primary" style="width:100%" onclick="submitDispute()" id="submit-btn">▶ Submit Dispute</button>
+        </div>
+        <div class="card">
+          <div class="card-title">📋 Case Status</div>
+          <div id="case-status-empty" style="color:var(--text-muted);font-size:13px;padding:20px 0;text-align:center">Submit a dispute to see case details</div>
+          <div id="case-status-filled" style="display:none">
+            <div id="case-info-rows"></div>
+            <div style="margin-top:16px"><div class="card-title" style="font-size:13px">⏱ Processing Steps</div><ul class="step-list" id="step-list"></ul></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVIDENCE -->
+    <div id="panel-evidence" class="panel">
+      <div class="section-header"><div><div class="section-title">Evidence Ingestion</div><div class="section-sub">POST /api/v1/evidence — Evidence Ingestion (Port 8002) with idempotency engine</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="card-title">📎 Upload Evidence</div>
+          <div class="form-group"><label class="form-label">Case ID</label><input class="form-control" id="ev-case-id" type="text" value="DSP-2026-0892"></div>
+          <div class="form-group"><label class="form-label">Evidence Type</label>
+            <select class="form-control" id="ev-type"><option>TRANSACTION_RECEIPT</option><option>MERCHANT_RESPONSE</option><option>BANK_STATEMENT</option><option>CHARGEBACK_FORM</option><option>DISPUTE_FORM</option><option>3DS_AUTH_LOG</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Source System</label>
+            <select class="form-control" id="ev-source"><option>CORE_BANKING</option><option>CARD_NETWORK</option><option>MERCHANT_PORTAL</option><option>CUSTOMER_APP</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Provenance Tag</label>
+            <select class="form-control" id="ev-prov"><option>SOURCE_SYSTEM_FACT</option><option>USER_INPUT</option><option>AUTOMATED_ACTION</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Content Summary</label><input class="form-control" id="ev-content" type="text" value="Transaction timestamp: 2026-08-27 14:32:07 UTC, Amount: USD 450.00, MCC: 5411"></div>
+          <button class="btn btn-primary" style="width:100%" onclick="ingestEvidence()">▶ Ingest Evidence</button>
+        </div>
+        <div class="card">
+          <div class="card-title">🔒 Idempotency Engine + PII Masking</div>
+          <div id="ev-result" style="color:var(--text-muted);font-size:13px;padding:16px 0;text-align:center">Upload evidence to see idempotency and PII masking results</div>
+          <div id="ev-table-wrap" style="display:none">
+            <div style="margin-bottom:12px"><div class="conf-label" style="margin-bottom:6px"><span style="font-weight:600">Idempotency Key (SHA-256)</span></div>
+              <div class="code-block" id="ev-idem-key" style="font-size:10px;padding:8px;word-break:break-all"></div></div>
+            <table class="data-table" id="ev-pii-table">
+              <thead><tr><th>Field</th><th>Stored Value (Masked)</th><th>Rule Applied</th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <div id="ev-ingested" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div class="card-title">📦 Evidence Ledger — Case DSP-2026-0892</div>
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Evidence ID</th><th>Type</th><th>Source</th><th>Provenance</th><th>Status</th><th>Ingested</th></tr></thead>
+          <tbody id="ev-ledger">
+            <tr><td>1</td><td style="font-family:monospace;font-size:10px">EVD-7f3a2c1d</td><td>TRANSACTION_RECEIPT</td><td>CORE_BANKING</td><td><span class="badge badge-blue">SOURCE_SYSTEM_FACT</span></td><td><span class="badge badge-green">VERIFIED</span></td><td>14:01 UTC</td></tr>
+            <tr><td>2</td><td style="font-family:monospace;font-size:10px">EVD-4e8b9f2a</td><td>3DS_AUTH_LOG</td><td>CARD_NETWORK</td><td><span class="badge badge-blue">SOURCE_SYSTEM_FACT</span></td><td><span class="badge badge-green">VERIFIED</span></td><td>14:03 UTC</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AI ANALYSIS -->
+    <div id="panel-ai-analysis" class="panel">
+      <div class="section-header"><div><div class="section-title">AI Inference Engine</div><div class="section-sub">POST /api/v1/analyze — AI Inference (Port 8003) · Phi-4 14B via vLLM + LiteLLM · Presidio PII scrub mandatory</div></div></div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">🛡 Presidio PII Scrubbing Pipeline (Pre-Inference)</div>
+        <table class="data-table">
+          <thead><tr><th>Step</th><th>Action</th><th>Tool</th><th>Output</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Receive case bundle (dispute + evidence summaries)</td><td>Dispute Manager</td><td>Raw case JSON</td></tr>
+            <tr><td>2</td><td>Detect PII entities (PAN, CVV, phone, email, SSN, name)</td><td>Presidio Analyzer</td><td>Entity list with offsets</td></tr>
+            <tr><td>3</td><td>Anonymise/redact detected entities</td><td>Presidio Anonymizer</td><td>PII-scrubbed payload</td></tr>
+            <tr><td>4</td><td>Write pii_scrub_log entry (entities found, counts, scrub_id)</td><td>Audit Trail :8009</td><td>scrub_id (UUID)</td></tr>
+            <tr><td>5</td><td>Route scrubbed payload to vLLM/Ollama via LiteLLM</td><td>LiteLLM Router</td><td>Inference request</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="card-title">🤖 Jinja2 Prompt Template</div>
+          <div class="code-block" style="font-size:10px">
+<span class="code-cmt"># System Prompt (static per dispute_type)</span>
+<span class="code-kw">You are an expert card dispute analyst</span>
+<span class="code-kw">with knowledge of Regulation E, Visa/MC rules.</span>
+Analyze evidence → recommend:
+  <span class="code-str">APPROVE_CARDHOLDER</span> | <span class="code-str">APPROVE_MERCHANT</span>
+  | <span class="code-str">NEEDS_MORE_EVIDENCE</span>
+Respond in JSON: {recommendation, confidence,
+  reasoning, evidence_weight_map}
+
+<span class="code-cmt"># Payload is PII-scrubbed before this point</span>
+<span class="code-cmt"># scrub_id links back to pii_scrub_log</span>
+Dispute: <span class="code-str">{{ dispute_type }}</span> | Amount: <span class="code-str">{{ amount }}</span>
+Jurisdiction: <span class="code-str">{{ jurisdiction }}</span>
+Evidence Items (<span class="code-str">{{ evidence|length }}</span>):
+<span class="code-kw">{% for e in evidence %}</span>
+  [<span class="code-str">{{ loop.index }}</span>] Type=<span class="code-str">{{ e.evidence_type }}</span>
+<span class="code-kw">{% endfor %}</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📐 Bayesian Confidence Scoring</div>
+          <div>
+            <div class="form-group"><label class="form-label">Dispute Type</label>
+              <select class="form-control" id="ai-disp-type" onchange="runBayesian()">
+                <option>UNAUTHORISED_TXN</option><option>MERCHANT_FRAUD</option><option>DUPLICATE_CHARGE</option><option>GOODS_NOT_RECEIVED</option><option>FX_DISPUTE</option>
+              </select></div>
+            <div class="form-group"><label class="form-label">SLM Self-Confidence (0.0–1.0)</label>
+              <input class="form-control" id="ai-llm-conf" type="range" min="0" max="1" step="0.01" value="0.85" oninput="runBayesian();document.getElementById('ai-llm-val').textContent=this.value">
+              <div style="text-align:right;font-size:11px;color:var(--text-muted)">Value: <span id="ai-llm-val">0.85</span></div>
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="runBayesian()">▶ Run Bayesian Update</button>
+          </div>
+          <div id="bayes-result" style="margin-top:16px;display:none">
+            <div class="conf-label"><span>Posterior Mean (β conjugate)</span><span id="bayes-mean-val" style="font-weight:700;color:var(--navy)"></span></div>
+            <div class="conf-bar-wrap" style="height:16px;margin-bottom:12px"><div class="conf-bar" id="bayes-bar" style="height:16px"></div></div>
+            <div id="bayes-ci" style="font-size:11px;color:var(--text-muted);margin-bottom:10px"></div>
+            <div id="bayes-gate" style="font-weight:700;font-size:13px;padding:8px 12px;border-radius:6px;"></div>
+            <div style="margin-top:12px">
+              <div class="conf-label" style="margin-bottom:6px"><span style="font-weight:600">Evidence Weight Map</span></div>
+              <table class="data-table" id="weight-table"><thead><tr><th>Evidence Type</th><th>Weight</th><th>Contribution</th></tr></thead><tbody id="weight-rows"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HITL -->
+    <div id="panel-hitl" class="panel">
+      <div class="section-header"><div><div class="section-title">Human Approval Queue</div><div class="section-sub">Human Approval Gateway (Port 8005) · Round-robin workload assignment</div></div></div>
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'hitl-analyst')">Analyst Queue (0.75–0.90)</div>
+        <div class="tab" onclick="switchTab(this,'hitl-manager')">Manager Queue (0.50–0.75)</div>
+        <div class="tab" onclick="switchTab(this,'hitl-escalated')">Escalated (&lt;0.50)</div>
+      </div>
+      <div id="hitl-analyst" class="tab-content"><div id="hitl-queue-list"></div></div>
+      <div id="hitl-manager" class="tab-content" style="display:none">
+        <div class="queue-row">
+          <div class="queue-priority" style="background:var(--amber)"></div>
+          <div class="queue-info"><div class="queue-id">DSP-2026-0887 · FX_DISPUTE · SGD 2,100.00</div><div class="queue-meta">Conf: 0.67 · Assigned: Mgr. Chen · SLA: 4h remaining · Jurisdiction: SG · Intake: Email</div></div>
+          <div class="queue-actions">
+            <button class="btn btn-success btn-sm" onclick="approveCase('DSP-2026-0887','APPROVE_CARDHOLDER')">✓ Approve CH</button>
+            <button class="btn btn-danger btn-sm" onclick="approveCase('DSP-2026-0887','APPROVE_MERCHANT')">✗ Approve Merch</button>
+          </div>
+        </div>
+      </div>
+      <div id="hitl-escalated" class="tab-content" style="display:none">
+        <div class="queue-row">
+          <div class="queue-priority" style="background:var(--red)"></div>
+          <div class="queue-info"><div class="queue-id">DSP-2026-0871 · MERCHANT_FRAUD · EUR 8,500.00</div><div class="queue-meta">Conf: 0.38 · Assigned: Compliance Officer · SLA: 1h remaining ⚠ BREACH RISK · Intake: Visa DRE</div></div>
+          <div class="queue-actions"><button class="btn btn-outline btn-sm" onclick="toast('Escalation form opened')">📋 Review</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESOLUTION -->
+    <div id="panel-resolution" class="panel">
+      <div class="section-header"><div><div class="section-title">Case Resolution</div><div class="section-sub">Workflow Manager (Port 8004) · FSM terminal states: RESOLVED → CLOSED</div></div></div>
+      <div class="card">
+        <div class="card-title">✅ Recently Resolved</div>
+        <table class="data-table"><thead><tr><th>Case ID</th><th>Type</th><th>Amount</th><th>Outcome</th><th>Method</th><th>Conf</th><th>Intake</th><th>Resolved At</th></tr></thead>
+        <tbody id="resolved-table"></tbody></table>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Resolution Summary</div>
+        <div class="card-grid">
+          <div class="stat-card"><div class="stat-value" style="color:var(--green)">168</div><div class="stat-label">STP Auto-Resolved</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:var(--blue)">51</div><div class="stat-label">Analyst Resolved</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:var(--amber)">19</div><div class="stat-label">Manager Resolved</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:var(--red)">9</div><div class="stat-label">Compliance Resolved</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLM HEALTH -->
+    <div id="panel-slm-health" class="panel">
+      <div class="section-header"><div><div class="section-title">SLM Model Health</div><div class="section-sub">On-Prem GPU Inference Cluster · LiteLLM Router · Model Registry</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="card">
+          <div class="card-title" style="color:var(--green)">✅ vLLM Server — Phi-4 14B (PRIMARY)</div>
+          <div class="info-row"><div class="info-key">Endpoint</div><div class="info-val" style="font-family:monospace">http://vllm-server:8080/v1</div></div>
+          <div class="info-row"><div class="info-key">Model</div><div class="info-val">microsoft/Phi-4 14B INT8</div></div>
+          <div class="info-row"><div class="info-key">Quantization</div><div class="info-val">INT8 via bitsandbytes/GPTQ</div></div>
+          <div class="info-row"><div class="info-key">GPU</div><div class="info-val">2× A100 80GB (160GB total VRAM)</div></div>
+          <div class="info-row"><div class="info-key">Active Adapter</div><div class="info-val"><span class="badge badge-purple">QLoRA · cdera-disputes-v3.2</span></div></div>
+          <div class="info-row"><div class="info-key">Tokens/sec</div><div class="info-val" id="vllm-tps">248</div></div>
+          <div style="margin-top:12px">
+            <div class="conf-label"><span>GPU Utilisation</span><span id="vllm-gpu-pct">71%</span></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="gpu-bar-wrap"><div class="gpu-bar" id="vllm-gpu-bar" style="width:71%;background:var(--green)"></div></div>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <div class="conf-label"><span>VRAM Usage</span><span id="vllm-vram">~14 GB / 160 GB</span></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="gpu-bar-wrap"><div class="gpu-bar" style="width:9%;background:var(--blue)"></div></div>
+            </div>
+          </div>
+          <div style="margin-top:10px"><span class="badge badge-green">● SERVING</span> <span style="font-size:11px;color:var(--text-muted);margin-left:8px">Uptime: 14d 6h</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--slate)">⏸ Ollama Server — Mistral-7B (FALLBACK)</div>
+          <div class="info-row"><div class="info-key">Endpoint</div><div class="info-val" style="font-family:monospace">http://ollama-server:11434</div></div>
+          <div class="info-row"><div class="info-key">Model</div><div class="info-val">Mistral-7B-Instruct-v0.3 INT4</div></div>
+          <div class="info-row"><div class="info-key">GPU</div><div class="info-val">1× RTX 3090 24GB</div></div>
+          <div class="info-row"><div class="info-key">Adapter</div><div class="info-val">None (base model · no QLoRA)</div></div>
+          <div class="info-row"><div class="info-key">Tokens/sec</div><div class="info-val">~62 (INT4 speed)</div></div>
+          <div style="margin-top:12px">
+            <div class="conf-label"><span>GPU Utilisation</span><span>4% (idle standby)</span></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="gpu-bar-wrap"><div class="gpu-bar" style="width:4%;background:var(--slate)"></div></div>
+            </div>
+          </div>
+          <div style="margin-top:10px"><span class="badge badge-slate">● STANDBY</span> <span style="font-size:11px;color:var(--text-muted);margin-left:8px">Ready in &lt;2s on vLLM failure</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 Model Registry — Active Adapters</div>
+        <table class="data-table">
+          <thead><tr><th>Adapter ID</th><th>Base Model</th><th>Version</th><th>Training Data</th><th>F1 Score</th><th>Status</th><th>Deployed</th></tr></thead>
+          <tbody>
+            <tr><td style="font-family:monospace;font-size:10px">ADAPT-2026-008</td><td>Phi-4 14B</td><td>cdera-disputes-v3.2</td><td>12,400 synthetic bundles</td><td><span class="badge badge-green">0.943</span></td><td><span class="badge badge-green">ACTIVE</span></td><td>2026-08-15</td></tr>
+            <tr><td style="font-family:monospace;font-size:10px">ADAPT-2026-007</td><td>Phi-4 14B</td><td>cdera-disputes-v3.1</td><td>10,200 synthetic bundles</td><td><span class="badge badge-blue">0.921</span></td><td><span class="badge badge-slate">RETIRED</span></td><td>2026-07-01</td></tr>
+            <tr><td style="font-family:monospace;font-size:10px">ADAPT-2026-005</td><td>Mistral-7B</td><td>cdera-mistral-v1.0</td><td>8,000 synthetic bundles</td><td><span class="badge badge-amber">0.887</span></td><td><span class="badge badge-slate">STANDBY</span></td><td>2026-06-10</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">⚡ Live Inference Metrics (simulated)</div>
+        <div class="card-grid">
+          <div class="stat-card"><div class="stat-value" id="inf-p50" style="color:var(--green)">340ms</div><div class="stat-label">P50 Inference Latency</div></div>
+          <div class="stat-card"><div class="stat-value" id="inf-p99" style="color:var(--blue)">820ms</div><div class="stat-label">P99 Inference Latency</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:var(--amber)">0</div><div class="stat-label">Cloud LLM Calls Today</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:var(--green)">100%</div><div class="stat-label">On-Prem Inference Rate</div></div>
+        </div>
+        <div style="margin-top:12px"><button class="btn btn-outline btn-sm" onclick="refreshSLM()">↻ Refresh metrics</button></div>
+      </div>
+    </div>
+
+    <!-- PII SCRUB LOG -->
+    <div id="panel-pii-scrub" class="panel">
+      <div class="section-header"><div><div class="section-title">PII Scrub Log</div><div class="section-sub">Audit Trail (Port 8009) · pii_scrub_log table · Every inference call generates one entry</div></div></div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">🛡 Presidio PII Scrub Log — Recent Entries</div>
+        <table class="data-table">
+          <thead><tr><th>Scrub ID</th><th>Case ID</th><th>Entities Found</th><th>Entities Masked</th><th>Model Used</th><th>Scrub Duration</th><th>Time</th></tr></thead>
+          <tbody id="pii-log-table">
+            <tr><td style="font-family:monospace;font-size:10px">SCR-f4a2e1b9</td><td>DSP-2026-0892</td><td>4</td><td><span class="badge badge-green">4/4</span></td><td>vLLM:Phi-4 14B</td><td>12ms</td><td>14:32 UTC</td></tr>
+            <tr><td style="font-family:monospace;font-size:10px">SCR-c7d3f8a1</td><td>DSP-2026-0891</td><td>3</td><td><span class="badge badge-green">3/3</span></td><td>vLLM:Phi-4 14B</td><td>9ms</td><td>14:28 UTC</td></tr>
+            <tr><td style="font-family:monospace;font-size:10px">SCR-8b2e4c6a</td><td>DSP-2026-0890</td><td>5</td><td><span class="badge badge-green">5/5</span></td><td>vLLM:Phi-4 14B</td><td>14ms</td><td>14:22 UTC</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">🔍 Entity Detail — SCR-f4a2e1b9 (DSP-2026-0892)</div>
+        <div class="pii-row" style="font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted)">
+          <div class="pii-field">Entity Type</div><div class="pii-orig">Original (not stored)</div><div class="pii-mask">Stored Value</div><div style="width:120px">Rule</div>
+        </div>
+        <div class="pii-row"><div class="pii-field">CREDIT_CARD</div><div class="pii-orig">4111 1111 1111 1111</div><div class="pii-mask">411111XXXXXX1111</div><div style="width:120px"><span class="badge badge-purple">MASK_PARTIAL</span></div></div>
+        <div class="pii-row"><div class="pii-field">PHONE_NUMBER</div><div class="pii-orig">+1-555-867-5309</div><div class="pii-mask">XXX-XXX-5309</div><div style="width:120px"><span class="badge badge-purple">MASK_PARTIAL</span></div></div>
+        <div class="pii-row"><div class="pii-field">EMAIL_ADDRESS</div><div class="pii-orig">sarah.johnson@gmail.com</div><div class="pii-mask">sar***@gmail.com</div><div style="width:120px"><span class="badge badge-purple">MASK_PARTIAL</span></div></div>
+        <div class="pii-row"><div class="pii-field">PERSON</div><div class="pii-orig">Sarah Johnson</div><div class="pii-mask">[PERSON_1]</div><div style="width:120px"><span class="badge badge-red">REDACT</span></div></div>
+        <div style="margin-top:10px;background:var(--green-lt);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--green)">
+          ✅ All 4 entities scrubbed before payload sent to vLLM. CVV not present in source. PCI-DSS 4.0 Req 4.2 — COMPLIANT.
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div id="panel-notifications" class="panel">
+      <div class="section-header"><div><div class="section-title">Notification Service</div><div class="section-sub">Port 8010 · Multi-channel outbound · POST /api/v1/notify · Triggered on FSM state transitions</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="card">
+          <div class="card-title">📤 Outbound Channels</div>
+          <table class="data-table">
+            <thead><tr><th>Channel</th><th>Trigger</th><th>SLA</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>📧 Email (SMTP)</td><td>Case RECEIVED, RESOLVED, CLOSED</td><td>&lt;30s</td><td><span class="badge badge-green">ACTIVE</span></td></tr>
+              <tr><td>📱 Push (FCM/APNs)</td><td>Case RECEIVED, PENDING_HUMAN, RESOLVED</td><td>&lt;5s</td><td><span class="badge badge-green">ACTIVE</span></td></tr>
+              <tr><td>💬 SMS (Twilio)</td><td>RESOLVED only (regulatory markets)</td><td>&lt;60s</td><td><span class="badge badge-green">ACTIVE</span></td></tr>
+              <tr><td>🌐 Merchant Portal</td><td>Evidence requested, RESOLVED</td><td>&lt;60s</td><td><span class="badge badge-green">ACTIVE</span></td></tr>
+              <tr><td>📠 Card Network</td><td>Chargeback outcome (Visa/MC)</td><td>Next batch</td><td><span class="badge badge-blue">BATCH</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">🔔 Simulate Notification — DSP-2026-0892</div>
+          <div class="form-group"><label class="form-label">Trigger Event</label>
+            <select class="form-control" id="notif-event">
+              <option value="received">Case RECEIVED — Acknowledgement</option>
+              <option value="evidence">Evidence Requested from Customer</option>
+              <option value="resolved_ch">RESOLVED — Cardholder Approved (Refund)</option>
+              <option value="resolved_merch">RESOLVED — Merchant Approved (Declined)</option>
+              <option value="escalated">ESCALATED — Compliance Review</option>
+            </select></div>
+          <div class="form-group"><label class="form-label">Recipient</label>
+            <select class="form-control" id="notif-recipient"><option>Cardholder (Sarah Johnson)</option><option>Merchant (AMAZON.COM)</option><option>Compliance Officer</option></select>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="sendNotification()">▶ Send Notification</button>
+          <div id="notif-preview" style="display:none;margin-top:12px"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📬 Notification Timeline — DSP-2026-0892</div>
+        <div id="notif-timeline">
+          <div class="notif-item"><div class="notif-icon" style="background:var(--blue-lt)">📧</div><div class="notif-body"><div class="notif-title">Case Acknowledgement sent</div><div class="notif-meta">Email → sarah.johnson@gmail.com · "Your dispute DSP-2026-0892 has been received. We will investigate within 45 days." · 14:01 UTC</div></div></div>
+          <div class="notif-item"><div class="notif-icon" style="background:var(--blue-lt)">📱</div><div class="notif-body"><div class="notif-title">Push notification sent</div><div class="notif-meta">FCM → device_token_xxx · "Dispute received. We're on it!" · 14:01 UTC</div></div></div>
+          <div class="notif-item"><div class="notif-icon" style="background:var(--amber-lt)">📎</div><div class="notif-body"><div class="notif-title">Evidence request sent to merchant</div><div class="notif-meta">Merchant Portal API → AMAZON.COM · "Please provide transaction records for order AMZ-2847361 within 10 days." · 14:05 UTC</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT TRAIL -->
+    <div id="panel-audit" class="panel">
+      <div class="section-header"><div><div class="section-title">Audit Trail</div><div class="section-sub">Audit Trail Service (Port 8009) · SHA-256 hash-chained, append-only</div></div></div>
+      <div class="card">
+        <div class="card-title">🔗 Hash Chain Verification</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+          <input class="form-control" id="audit-case-id" value="DSP-2026-0892" style="max-width:250px">
+          <button class="btn btn-primary" onclick="verifyChain()">🔍 Verify Chain</button>
+        </div>
+        <div id="chain-status" style="display:none;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600;margin-bottom:12px"></div>
+        <div id="audit-log-entries"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📐 Hash Chain Algorithm</div>
+        <div class="code-block" style="font-size:10px">
+<span class="code-kw">def</span> create_audit_entry(case_id, event_type, actor_id, action):
+    prev = get_last_entry(case_id)
+    prev_hash = prev[<span class="code-str">'hash_value'</span>] <span class="code-kw">if</span> prev <span class="code-kw">else</span> <span class="code-str">"GENESIS"</span>
+    content = <span class="code-str">f"{case_id}|{event_type}|{actor_id}|{action}|{utcnow()}"</span>
+    hash_value = sha256(content + prev_hash)
+    <span class="code-kw">return</span> insert_audit_log({<span class="code-str">'hash_value'</span>: hash_value, ...})</div>
+      </div>
+    </div>
+
+    <!-- FSM -->
+    <div id="panel-fsm" class="panel">
+      <div class="section-header"><div><div class="section-title">FSM State Visualiser</div><div class="section-sub">Workflow Manager (Port 8004) · python-transitions library</div></div></div>
+      <div class="card">
+        <div class="card-title">🔄 Dispute Lifecycle States</div>
+        <div class="fsm-states" id="fsm-states-display"></div>
+        <div style="margin-top:16px">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Simulate transition for case: <strong id="fsm-case-id">DSP-2026-0892</strong></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" onclick="fsmTransition('RECEIVED')">→ RECEIVED</button>
+            <button class="btn btn-outline btn-sm" onclick="fsmTransition('EVIDENCE_GATHERING')">→ EVIDENCE GATHERING</button>
+            <button class="btn btn-outline btn-sm" onclick="fsmTransition('AI_ANALYSIS')">→ AI ANALYSIS</button>
+            <button class="btn btn-outline btn-sm" onclick="fsmTransition('PENDING_HUMAN')">→ PENDING HUMAN</button>
+            <button class="btn btn-outline btn-sm" onclick="fsmTransition('ESCALATED')">→ ESCALATED</button>
+            <button class="btn btn-outline btn-sm" onclick="fsmTransition('RESOLVED')">→ RESOLVED</button>
+            <button class="btn btn-outline btn-sm" onclick="fsmTransition('CLOSED')">→ CLOSED</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 Transition Table</div>
+        <table class="data-table">
+          <thead><tr><th>From</th><th>Trigger</th><th>To</th><th>Guard</th></tr></thead>
+          <tbody>
+            <tr><td>RECEIVED</td><td>start_evidence_gathering</td><td>EVIDENCE_GATHERING</td><td>case_validated</td></tr>
+            <tr><td>EVIDENCE_GATHERING</td><td>evidence_sufficient</td><td>AI_ANALYSIS</td><td>min_evidence_met</td></tr>
+            <tr><td>EVIDENCE_GATHERING</td><td>evidence_timeout</td><td>ESCALATED</td><td>deadline_breached</td></tr>
+            <tr><td>AI_ANALYSIS</td><td>confidence_high</td><td>RESOLVED</td><td>posterior &gt; 0.90 (STP)</td></tr>
+            <tr><td>AI_ANALYSIS</td><td>confidence_medium</td><td>PENDING_HUMAN</td><td>posterior 0.50–0.90</td></tr>
+            <tr><td>AI_ANALYSIS</td><td>confidence_low</td><td>ESCALATED</td><td>posterior &lt; 0.50</td></tr>
+            <tr><td>PENDING_HUMAN</td><td>analyst_decision</td><td>RESOLVED</td><td>decision submitted</td></tr>
+            <tr><td>PENDING_HUMAN</td><td>sla_breach_warning</td><td>ESCALATED</td><td>80% deadline</td></tr>
+            <tr><td>ESCALATED</td><td>manager_decision</td><td>RESOLVED</td><td>CO decision submitted</td></tr>
+            <tr><td>RESOLVED</td><td>close_case</td><td>CLOSED</td><td>notification sent</td></tr>
+            <tr><td>RESOLVED</td><td>reopen_case</td><td>EVIDENCE_GATHERING</td><td>material_change</td></tr>
+            <tr><td>CLOSED</td><td>—</td><td>—</td><td>terminal state</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Approve modal -->
+<div class="modal-bg" id="approve-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Confirm Decision</div>
+    <div class="form-group"><label class="form-label">Decision Rationale</label><textarea class="form-control" id="modal-rationale" rows="3" placeholder="Provide rationale..."></textarea></div>
+    <div class="form-group"><label class="form-label">Your Role</label>
+      <select class="form-control" id="modal-role"><option>ANALYST</option><option>MANAGER</option><option>COMPLIANCE_OFFICER</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitDecision()">Confirm</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ===================== DATA ===================== */
+const SERVICES = [
+  {name:'API Gateway',          port:8000,  db:null,          status:'healthy'},
+  {name:'Dispute Manager',      port:8001,  db:'dispute_db',  status:'healthy'},
+  {name:'Evidence Ingestion',   port:8002,  db:'evidence_db', status:'healthy'},
+  {name:'AI Inference Engine',  port:8003,  db:null,          status:'healthy'},
+  {name:'Workflow Manager',     port:8004,  db:'workflow_db', status:'healthy'},
+  {name:'Human Approval GW',   port:8005,  db:null,          status:'healthy'},
+  {name:'Conflict Detection',   port:8006,  db:null,          status:'healthy'},
+  {name:'Jurisdiction Engine',  port:8007,  db:'geo_db',      status:'healthy'},
+  {name:'FX Rate Service',      port:8008,  db:null,          status:'healthy'},
+  {name:'Audit Trail',          port:8009,  db:'audit_db',    status:'healthy'},
+  {name:'Notification Service', port:8010,  db:null,          status:'healthy'},
+  {name:'vLLM Server',          port:8080,  db:null,          status:'healthy', note:'Phi-4 14B · A100 80GB'},
+  {name:'Ollama Server',        port:11434, db:null,          status:'standby', note:'Mistral-7B · RTX3090'},
+];
+
+const EVIDENCE_TYPES = ['bank_statement','merchant_receipt','transaction_log','card_auth_record','correspondence','contract'];
+
+const EMAIL_SAMPLES = {
+  unauthorized: {
+    from: 'sarah.johnson@gmail.com',
+    subject: 'URGENT: Unauthorized charge on my Visa card - $489.99',
+    date: '2026-08-28 09:14 UTC',
+    body: `Dear Support Team,
+
+I am writing to dispute an unauthorized charge of $489.99 that appeared on my Visa card ending in 4521 on August 26, 2026.
+
+Transaction details:
+- Amount: $489.99
+- Merchant: LUXE ELECTRONICS ONLINE
+- Date: 26 Aug 2026
+- My card: Visa *4521
+
+I did NOT authorize this purchase. I have never shopped at this merchant. I was traveling in Singapore at the time and my card was physically with me.
+
+I am requesting an immediate investigation and full chargeback.
+
+Best regards,
+Sarah Johnson
+Customer ID: CUST-2029481
+Phone: +971-55-123-4567`
+  },
+  goods: {
+    from: 'ahmed.al.rashidi@company.ae',
+    subject: 'Dispute - goods not received, order #ORD-88821',
+    date: '2026-08-27 14:32 UTC',
+    body: `Hello,
+
+I placed an order (#ORD-88821) on August 10, 2026 for AED 2,350 with MegaShop UAE. The merchant charged my card but the goods were never delivered.
+
+- Order: #ORD-88821
+- Amount: AED 2,350.00
+- Card: Mastercard *7834
+- Expected delivery: August 18, 2026
+
+The merchant is not responding to my emails or calls. Tracking shows "label created" but no movement for 18 days. I have screenshots of all communications.
+
+Please initiate a chargeback.
+
+Ahmed Al-Rashidi
+Account: ACC-773920`
+  },
+  merchant: {
+    from: 'disputes@techmart.com',
+    subject: 'Merchant counter-evidence submission - Case REF-2026-0441',
+    date: '2026-08-28 11:05 UTC',
+    body: `CDERA Disputes Team,
+
+Re: Case REF-2026-0441 — Cardholder: M. Fernandez, Amount: $1,200.00
+
+We are TechMart Inc. (Merchant ID: MRCH-44892) and wish to submit evidence that the disputed transaction was fully authorized.
+
+Evidence attached:
+1. Signed delivery confirmation (PDF)
+2. Customer email confirming receipt dated Aug 20, 2026
+3. Full transaction auth log showing 3DS verification
+4. CCTV timestamp of in-store pickup
+
+The cardholder did receive the goods. We respectfully request this dispute be closed in our favour.
+
+TechMart Disputes Team
+disputes@techmart.com | +1-888-TECHMART`
+  },
+  fx: {
+    from: 'priya.nair@fintech.sg',
+    subject: 'FX dispute - incorrect conversion rate applied - SGD to USD',
+    date: '2026-08-26 07:58 UTC',
+    body: `To Whom It May Concern,
+
+I am disputing an FX conversion error on a transaction dated August 24, 2026.
+
+- Original amount: SGD 850.00
+- Converted amount charged: USD 680.00
+- Expected at published rate (0.755): USD 641.75
+- Overcharged by: USD 38.25
+
+The rate applied (0.800) significantly differs from the published interbank rate on that date. I have the MAS published rate as proof.
+
+Transaction ref: TXN-SG-20260824-9921
+Account: ACCT-SG-20981
+
+Please investigate and refund the difference.
+
+Priya Nair`
+  }
+};
+
+const DISPUTE_SCENARIOS = [
+  { id:'DSP-2026-0891', type:'Unauthorized Transaction', amount:'$489.99', currency:'USD',
+    channel:'Email Parser', region:'UAE', merchant:'Luxe Electronics Online',
+    confidence:0.94, resolution:'AUTO_APPROVED', state:'RESOLVED',
+    piiScrubbed:['email','name','card_number','phone'] },
+  { id:'DSP-2026-0887', type:'Goods Not Received', amount:'AED 2,350', currency:'AED',
+    channel:'Mobile App', region:'UAE', merchant:'MegaShop UAE',
+    confidence:0.71, resolution:'ANALYST_REVIEW', state:'PENDING_HUMAN',
+    piiScrubbed:['name','account_id','order_id'] },
+  { id:'DSP-2026-0879', type:'FX Conversion Error', amount:'SGD 850', currency:'SGD',
+    channel:'Merchant Portal API', region:'SG', merchant:'Fintech.SG',
+    confidence:0.58, resolution:'MANAGER_ESCALATED', state:'ESCALATED',
+    piiScrubbed:['name','email','account_id','transaction_ref'] },
+  { id:'DSP-2026-0863', type:'Duplicate Charge', amount:'€220.00', currency:'EUR',
+    channel:'Card Network', region:'EU', merchant:'Skyline Hotels',
+    confidence:0.97, resolution:'AUTO_APPROVED', state:'CLOSED',
+    piiScrubbed:['name','card_number'] },
+];
+
+/* ===================== STATE ===================== */
+let currentCase = null;
+let fsmState = 'RECEIVED';
+let auditLog = [];
+let resolvedCases = [];
+let currentDispute = null;
+let darkMode = true;
+
+/* ===================== INIT ===================== */
+document.addEventListener('DOMContentLoaded', () => {
+  initServices();
+  initFSM();
+  initHITL();
+  initResolvedTable();
+  initAuditLog();
+  initNotifications();
+  renderSLMHealth();
+  renderPIIScrubLog();
+  refreshMetrics();
+  showPanel('dashboard');
+});
+
+/* ===================== SERVICES ===================== */
+function initServices() {
+  const grid = document.getElementById('svc-grid');
+  if (!grid) return;
+  grid.innerHTML = SERVICES.map(s => {
+    const isStandby = s.status === 'standby';
+    const dotClass = isStandby ? 'status-dot standby' : 'status-dot healthy';
+    const badge = isStandby ? 'STANDBY' : 'HEALTHY';
+    const badgeClass = isStandby ? 'badge badge-warn' : 'badge badge-success';
+    return `<div class="svc-card">
+      <div class="svc-header">
+        <span class="svc-name">${s.name}</span>
+        <span class="${badgeClass}">${badge}</span>
+      </div>
+      <div class="svc-meta">Port ${s.port}${s.db ? ' · DB: '+s.db : ''}${s.note ? '<br><small style="color:var(--accent)">'+s.note+'</small>' : ''}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+        <span class="${dotClass}"></span>
+        <span style="font-size:0.72rem;color:var(--text-muted)">Latency: ${Math.floor(Math.random()*40+8)}ms</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ===================== CHANNEL GATEWAY ===================== */
+function simulateChannelEvent(channel) {
+  const events = {
+    mobile:    { icon:'📱', msg:'Mobile App: New dispute submitted via MyBank App v3.2', type:'Mobile App (42%)', caseId:'DSP-2026-'+Math.floor(Math.random()*9000+1000) },
+    email:     { icon:'📧', msg:'Email Parser: IMAP message received from customer', type:'Email Parser (34%)', caseId:'DSP-2026-'+Math.floor(Math.random()*9000+1000) },
+    portal:    { icon:'🏪', msg:'Merchant Portal API: POST /disputes from merchant system', type:'Merchant Portal API (12%)', caseId:'DSP-2026-'+Math.floor(Math.random()*9000+1000) },
+    network:   { icon:'🌐', msg:'Card Network: Visa DRE chargeback notification received', type:'Card Network (4%)', caseId:'DSP-2026-'+Math.floor(Math.random()*9000+1000) },
+    ivr:       { icon:'📞', msg:'IVR/Branch: Agent logged dispute from phone call', type:'IVR/Branch (8%)', caseId:'DSP-2026-'+Math.floor(Math.random()*9000+1000) },
+  };
+  const ev = events[channel];
+  const log = document.getElementById('channel-log');
+  if (!log) return;
+  const entry = document.createElement('div');
+  entry.className = 'channel-event';
+  entry.innerHTML = `<span style="color:var(--accent)">${ev.icon} ${new Date().toISOString().slice(11,19)} UTC</span> — 
+    ${ev.msg} → <strong>${ev.caseId}</strong> created · Channel normalised via 6-step pipeline`;
+  log.prepend(entry);
+  if (log.children.length > 8) log.lastChild.remove();
+  addAuditEntry('CASE_CREATED', ev.type.split(' ')[0].toUpperCase(), `${ev.caseId} auto-created · channel: ${ev.type}`, 'intake');
+  refreshMetrics();
+  toast(`${ev.icon} Case auto-created from ${ev.type} — audit log & metrics updated`);
+}
+
+/* ===================== EMAIL PARSER ===================== */
+function loadEmailSample(type) {
+  const s = EMAIL_SAMPLES[type];
+  if (!s) return;
+  document.getElementById('email-from').textContent = s.from;
+  document.getElementById('email-subj').textContent = s.subject;
+  document.getElementById('email-date').textContent = s.date;
+  document.getElementById('email-body').textContent = s.body;
+  document.getElementById('email-result').innerHTML = '';
+}
+
+function parseEmail() {
+  const from  = document.getElementById('email-from').textContent;
+  const subj  = document.getElementById('email-subj').textContent;
+  const body  = document.getElementById('email-body').textContent;
+  if (!from) { toast('Load an email sample first'); return; }
+
+  // NLP extraction heuristics
+  let type = 'Unauthorized Transaction';
+  let amount = 'Unknown'; let currency = 'USD'; let merchant = 'Unknown';
+  if (/goods|not received|delivery|order/i.test(subj+body)) type = 'Goods Not Received';
+  else if (/fx|conversion|rate|sgd|eur/i.test(subj+body)) type = 'FX Conversion Error';
+  else if (/merchant|counter|evidence/i.test(subj+body)) type = 'Merchant Counter-Evidence';
+  else if (/duplicate/i.test(subj+body)) type = 'Duplicate Charge';
+
+  const amtMatch = body.match(/[\$€£AED SGD][\s]?[\d,]+\.?\d{0,2}/);
+  if (amtMatch) amount = amtMatch[0].replace(/\s/g,'');
+  const mMatch = body.match(/merchant[:\s]+([A-Z][A-Za-z\s]{2,30})/i);
+  if (mMatch) merchant = mMatch[1].trim();
+
+  const piiFound = [];
+  if (/\b[\w.-]+@[\w.-]+\.\w+\b/.test(body)) piiFound.push('email_address');
+  if (/\*\d{4}/.test(body)) piiFound.push('card_last4');
+  if (/\+\d{2}[\d\-\s]{8,}/.test(body)) piiFound.push('phone_number');
+  if (/customer id|account|CUST-|ACC-/i.test(body)) piiFound.push('account_identifier');
+
+  const caseId = 'DSP-2026-' + Math.floor(Math.random()*9000+1000);
+  const scrubId = 'SCR-' + Math.random().toString(36).slice(2,10);
+
+  document.getElementById('email-result').innerHTML = `
+    <div class="evidence-item" style="margin-top:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+        <strong style="color:var(--accent)">NLP Extraction Complete</strong>
+        <span class="badge badge-success">Case Auto-Created</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+        <tr><td style="padding:3px 8px;color:var(--text-muted)">Case ID</td><td style="padding:3px 8px"><strong>${caseId}</strong></td></tr>
+        <tr><td style="padding:3px 8px;color:var(--text-muted)">Dispute Type</td><td style="padding:3px 8px">${type}</td></tr>
+        <tr><td style="padding:3px 8px;color:var(--text-muted)">Amount</td><td style="padding:3px 8px">${amount}</td></tr>
+        <tr><td style="padding:3px 8px;color:var(--text-muted)">Merchant</td><td style="padding:3px 8px">${merchant}</td></tr>
+        <tr><td style="padding:3px 8px;color:var(--text-muted)">Sender</td><td style="padding:3px 8px;color:var(--warn)">■■■■@■■■■ (PII scrubbed)</td></tr>
+        <tr><td style="padding:3px 8px;color:var(--text-muted)">PII Scrubbed</td><td style="padding:3px 8px;color:var(--warn)">${piiFound.join(', ')||'none detected'} · Scrub ID: ${scrubId}</td></tr>
+        <tr><td style="padding:3px 8px;color:var(--text-muted)">Channel</td><td style="padding:3px 8px">Email Parser → IMAP → NLP → Normalised</td></tr>
+        <tr><td style="padding:3px 8px;color:var(--text-muted)">Next Step</td><td style="padding:3px 8px">FSM: RECEIVED → EVIDENCE_GATHERING</td></tr>
+      </table>
+    </div>`;
+  addAuditEntry('CASE_CREATED','EMAIL_PARSER',`${caseId} auto-created from email · type: ${type}`,'intake');
+  addAuditEntry('PII_SCRUBBED','PRESIDIO',`${scrubId}: ${piiFound.length} entity types scrubbed`,'system');
+  toast(`📧 ${caseId} created from email — FSM started`);
+}
+
+/* ===================== FSM ===================== */
+const FSM_STATES = ['RECEIVED','EVIDENCE_GATHERING','AI_ANALYSIS','PENDING_HUMAN','ESCALATED','RESOLVED','CLOSED'];
+const FSM_TRANSITIONS = {
+  'RECEIVED':           ['EVIDENCE_GATHERING'],
+  'EVIDENCE_GATHERING': ['AI_ANALYSIS'],
+  'AI_ANALYSIS':        ['PENDING_HUMAN','ESCALATED','RESOLVED'],
+  'PENDING_HUMAN':      ['ESCALATED','RESOLVED'],
+  'ESCALATED':          ['RESOLVED'],
+  'RESOLVED':           ['CLOSED'],
+  'CLOSED':             [],
+};
+
+function initFSM() {
+  fsmState = 'RECEIVED';
+  renderFSM();
+}
+
+function renderFSM() {
+  const wrap = document.getElementById('fsm-states');
+  if (!wrap) return;
+  wrap.innerHTML = FSM_STATES.map(s => {
+    const active = s === fsmState;
+    const past = FSM_STATES.indexOf(s) < FSM_STATES.indexOf(fsmState);
+    let cls = 'fsm-state';
+    if (active) cls += ' active';
+    else if (past) cls += ' past';
+    return `<div class="${cls}">${s}</div>`;
+  }).join('<div class="fsm-arrow">→</div>');
+
+  const nexts = FSM_TRANSITIONS[fsmState] || [];
+  const btnWrap = document.getElementById('fsm-btns');
+  if (!btnWrap) return;
+  btnWrap.innerHTML = nexts.length
+    ? nexts.map(n => `<button class="btn btn-primary" onclick="fsmTransition('${n}')">${fsmState} → ${n}</button>`).join('')
+    : '<span style="color:var(--text-muted);font-size:.8rem">Terminal state — no further transitions</span>';
+  document.getElementById('fsm-current').textContent = fsmState;
+}
+
+function fsmTransition(next) {
+  addAuditEntry('FSM_TRANSITION','WORKFLOW_MGR',`State: ${fsmState} → ${next}`,'system');
+  fsmState = next;
+  renderFSM();
+  toast(`FSM → ${next}`);
+}
+
+/* ===================== DISPUTE FORM ===================== */
+function submitDispute() {
+  const type    = document.getElementById('dispute-type').value;
+  const amount  = document.getElementById('dispute-amount').value;
+  const currency= document.getElementById('dispute-currency').value;
+  const merchant= document.getElementById('dispute-merchant').value;
+  const desc    = document.getElementById('dispute-desc').value;
+  if (!amount || !merchant) { toast('Fill in amount and merchant'); return; }
+
+  const caseId = 'DSP-2026-' + Math.floor(Math.random()*9000+1000);
+  currentCase  = { id:caseId, type, amount, currency, merchant, desc, state:'RECEIVED', channel:'Web Portal' };
+  fsmState = 'RECEIVED';
+  renderFSM();
+  addAuditEntry('CASE_CREATED','WEB_PORTAL',`${caseId} created manually · type: ${type}`,'intake');
+  toast(`Case ${caseId} created · FSM initialised`);
+  showPanel('evidence');
+}
+
+/* ===================== EVIDENCE ===================== */
+function ingestEvidence() {
+  const type = document.getElementById('evidence-type').value;
+  const file = document.getElementById('evidence-file').value || 'attachment_'+Date.now()+'.pdf';
+  const hash = 'sha256:' + Math.random().toString(36).slice(2).padEnd(64,'0').slice(0,64);
+
+  const grid = document.getElementById('evidence-grid');
+  if (!grid) return;
+  const card = document.createElement('div');
+  card.className = 'evidence-item';
+  card.innerHTML = `<div style="display:flex;justify-content:space-between">
+    <strong>${type}</strong><span class="badge badge-success">INGESTED</span></div>
+    <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">${file}</div>
+    <div style="font-size:.72rem;color:var(--accent);margin-top:2px;word-break:break-all">${hash}</div>`;
+  grid.appendChild(card);
+
+  if (fsmState === 'RECEIVED') { fsmState = 'EVIDENCE_GATHERING'; renderFSM(); }
+  addAuditEntry('EVIDENCE_INGESTED','EVIDENCE_SVC',`${type} · hash ${hash.slice(0,26)}…`,'evidence');
+  toast(`Evidence ingested: ${type}`);
+}
+
+/* ===================== AI ANALYSIS ===================== */
+function runBayesian() {
+  const conf  = parseFloat(document.getElementById('confidence-slider').value);
+  const label = document.getElementById('confidence-display');
+  const result= document.getElementById('ai-result');
+  if (!label || !result) return;
+
+  label.textContent = (conf*100).toFixed(0) + '%';
+  let decision, tier, badgeClass;
+  if (conf >= 0.90) { decision='AUTO_RESOLVE · STP'; tier='Confidence ≥ 90% — Straight-Through Processing'; badgeClass='badge-success'; }
+  else if (conf >= 0.75) { decision='ANALYST REVIEW'; tier='Confidence 75–90% — Level 1 human review'; badgeClass='badge-warn'; }
+  else if (conf >= 0.50) { decision='MANAGER ESCALATION'; tier='Confidence 50–75% — Senior analyst required'; badgeClass='badge-warn'; }
+  else { decision='COMPLIANCE ESCALATION'; tier='Confidence < 50% — Compliance officer required'; badgeClass='badge-error'; }
+
+  const scrubId = 'SCR-' + Math.random().toString(36).slice(2,10);
+  result.innerHTML = `
+    <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+      <strong>Bayesian Outcome:</strong>
+      <span class="badge ${badgeClass}">${decision}</span>
+    </div>
+    <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.5rem">${tier}</div>
+    <div style="font-size:.78rem;margin-top:.75rem;padding:.5rem;background:var(--bg-tertiary);border-radius:6px">
+      <div style="color:var(--warn);margin-bottom:4px">🔒 Presidio PII scrub: ${scrubId} — entities cleared before inference</div>
+      <div style="color:var(--text-muted)">LiteLLM routed → vLLM Server :8080 · Phi-4 14B INT8 · adapter cdera-disputes-v3.2</div>
+      <div style="color:var(--text-muted)">Tokens: ${Math.floor(Math.random()*800+400)} in · ${Math.floor(Math.random()*200+80)} out · Latency: ${Math.floor(Math.random()*1200+600)}ms</div>
+    </div>`;
+
+  if (fsmState === 'EVIDENCE_GATHERING' || fsmState === 'RECEIVED') {
+    fsmState = 'AI_ANALYSIS'; renderFSM();
+  }
+  addAuditEntry('PII_SCRUBBED','PRESIDIO',`${scrubId}: PII cleared before Phi-4 inference`,'system');
+  addAuditEntry('AI_ANALYSIS_COMPLETE','AI_ENGINE',`confidence=${(conf*100).toFixed(0)}% · decision=${decision} · model=vLLM:Phi-4-14B`,'ai');
+  toast(`AI Analysis: ${decision} (${(conf*100).toFixed(0)}%)`);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const slider = document.getElementById('confidence-slider');
+  if (slider) slider.addEventListener('input', () => {
+    const v = parseFloat(slider.value);
+    document.getElementById('confidence-display').textContent = (v*100).toFixed(0)+'%';
+  });
+});
+
+/* ===================== HITL ===================== */
+let hitlCases = [];
+function initHITL() {
+  hitlCases = [
+    { id:'DSP-2026-0887', type:'Goods Not Received', amount:'AED 2,350', conf:0.71, tier:'ANALYST',   age:'2h 14m' },
+    { id:'DSP-2026-0879', type:'FX Conversion Error',amount:'SGD 850',   conf:0.58, tier:'MANAGER',   age:'5h 03m' },
+    { id:'DSP-2026-0865', type:'Unauthorized Txn',   amount:'€320.00',   conf:0.82, tier:'ANALYST',   age:'0h 47m' },
+    { id:'DSP-2026-0851', type:'Duplicate Charge',   amount:'$99.00',    conf:0.44, tier:'COMPLIANCE', age:'11h 22m'},
+  ];
+  renderHITL();
+}
+
+function renderHITL() {
+  const wrap = document.getElementById('hitl-queue-list');
+  if (!wrap) return;
+  if (!hitlCases.length) {
+    wrap.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;padding:12px 0">Queue empty — all cases resolved</div>';
+    return;
+  }
+  wrap.innerHTML = hitlCases.map(c => `
+    <div class="evidence-item" style="margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:4px">
+        <strong style="font-size:.82rem">${c.id}</strong>
+        <span class="badge ${c.tier==='COMPLIANCE'?'badge-error':c.tier==='MANAGER'?'badge-warn':'badge-info'}">${c.tier}</span>
+        <span style="margin-left:auto;font-size:.75rem;color:var(--text-muted)">Age: ${c.age}</span>
+      </div>
+      <div style="font-size:.78rem;color:var(--text-secondary);margin-bottom:6px">${c.type} · ${c.amount} · conf: ${(c.conf*100).toFixed(0)}%</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-primary" style="padding:3px 10px;font-size:.72rem" onclick="approveCase('${c.id}','APPROVED')">✓ Approve</button>
+        <button class="btn btn-outline" style="padding:3px 10px;font-size:.72rem" onclick="approveCase('${c.id}','REJECTED')">✗ Reject</button>
+      </div>
+    </div>`).join('');
+}
+
+function approveCase(id, defaultAction) {
+  currentDispute = hitlCases.find(c => c.id === id);
+  document.getElementById('modal-title').textContent = `${defaultAction === 'APPROVED' ? 'Approve' : 'Reject'} — ${id}`;
+  document.getElementById('modal-rationale').value = '';
+  document.getElementById('approve-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('approve-modal').classList.remove('open');
+  currentDispute = null;
+}
+
+function submitDecision() {
+  const rationale = document.getElementById('modal-rationale').value;
+  const role      = document.getElementById('modal-role').value;
+  if (!rationale) { toast('Provide rationale'); return; }
+  if (!currentDispute) return;
+
+  const title = document.getElementById('modal-title').textContent;
+  const action = title.startsWith('Approve') ? 'APPROVED' : 'REJECTED';
+
+  hitlCases = hitlCases.filter(c => c.id !== currentDispute.id);
+  renderHITL();
+
+  resolvedCases.unshift({ id:currentDispute.id, type:currentDispute.type,
+    amount:currentDispute.amount, decision:action, role, ts: new Date().toISOString().slice(0,16).replace('T',' ') });
+  renderResolvedTable();
+
+  addAuditEntry('HUMAN_DECISION','HITL_GW',`${currentDispute.id} · decision=${action} · role=${role} · rationale recorded`,'hitl');
+  fsmState = action === 'APPROVED' ? 'RESOLVED' : 'ESCALATED';
+  renderFSM();
+  closeModal();
+  toast(`${action}: ${currentDispute.id}`);
+}
+
+/* ===================== RESOLVED TABLE ===================== */
+function initResolvedTable() {
+  resolvedCases = [
+    { id:'DSP-2026-0891', type:'Unauthorized Txn',  amount:'$489.99', decision:'AUTO_APPROVED',  role:'AI_ENGINE',  ts:'2026-08-28 09:31' },
+    { id:'DSP-2026-0863', type:'Duplicate Charge',  amount:'€220.00', decision:'AUTO_APPROVED',  role:'AI_ENGINE',  ts:'2026-08-27 16:44' },
+    { id:'DSP-2026-0844', type:'FX Error',           amount:'$134.50', decision:'APPROVED',       role:'MANAGER',    ts:'2026-08-27 11:20' },
+    { id:'DSP-2026-0831', type:'Goods Not Received', amount:'AED 890', decision:'REJECTED',       role:'ANALYST',    ts:'2026-08-26 14:55' },
+  ];
+  renderResolvedTable();
+}
+
+function renderResolvedTable() {
+  const tb = document.getElementById('resolved-table');
+  if (!tb) return;
+  const channels = { AI_ENGINE:'STP / AI', ANALYST:'Human', MANAGER:'Human', COMPLIANCE:'Human' };
+  tb.innerHTML = resolvedCases.map(r => {
+    const decBadge = r.decision.includes('AUTO') ? 'badge-success' : r.decision==='REJECTED' ? 'badge-error' : 'badge-success';
+    return `<tr>
+      <td>${r.id}</td>
+      <td>${r.type}</td>
+      <td>${r.amount}</td>
+      <td><span class="badge ${decBadge}">${r.decision}</span></td>
+      <td>${r.role}</td>
+      <td>—</td>
+      <td>${channels[r.role]||r.role}</td>
+      <td>${r.ts}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ===================== SLM HEALTH ===================== */
+function renderSLMHealth() {
+  const vg = document.getElementById('vllm-gpu');
+  const og = document.getElementById('ollama-gpu');
+  if (vg) { const p=Math.floor(Math.random()*20+72); vg.style.width=p+'%'; vg.textContent=p+'%'; vg.parentElement.previousElementSibling && (vg.parentElement.previousElementSibling.textContent='GPU Utilisation'); }
+  if (og) { const p=Math.floor(Math.random()*10+8);  og.style.width=p+'%'; og.textContent=p+'%'; }
+}
+
+function refreshSLM() {
+  renderSLMHealth();
+  addAuditEntry('SLM_HEALTH_CHECK','MONITOR',`vLLM health OK · Ollama standby OK · adapter v3.2 loaded`,'system');
+  toast('SLM health refreshed');
+}
+
+/* ===================== PII SCRUB LOG ===================== */
+const PII_LOG_DATA = [
+  { id:'SCR-f4a2e1b9', caseId:'DSP-2026-0891', entities:['EMAIL','PHONE','CARD_NUMBER','NAME'], ts:'09:14:22', status:'CLEARED' },
+  { id:'SCR-a1b3c2d4', caseId:'DSP-2026-0887', entities:['NAME','ACCOUNT_ID','ORDER_ID'], ts:'14:32:05', status:'CLEARED' },
+  { id:'SCR-e9f2a3b1', caseId:'DSP-2026-0879', entities:['NAME','EMAIL','TXN_REF','ACCOUNT_ID'], ts:'07:58:41', status:'CLEARED' },
+  { id:'SCR-d4c3b2a1', caseId:'DSP-2026-0863', entities:['NAME','CARD_NUMBER'], ts:'16:44:17', status:'CLEARED' },
+];
+
+function renderPIIScrubLog() {
+  const wrap = document.getElementById('pii-log-rows');
+  if (!wrap) return;
+  wrap.innerHTML = PII_LOG_DATA.map(r => `
+    <div class="pii-row">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:.8rem;font-weight:600;color:var(--accent)">${r.id}</span>
+        <span class="badge badge-success">${r.status}</span>
+      </div>
+      <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px">${r.caseId} · ${r.ts} UTC</div>
+      <div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">
+        ${r.entities.map(e=>`<span style="background:var(--warn);color:#fff;border-radius:3px;padding:1px 6px;font-size:.7rem">${e}</span>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+/* ===================== NOTIFICATIONS ===================== */
+const NOTIF_DATA = [
+  { icon:'✅', title:'DSP-2026-0891 Auto-Resolved', body:'Unauthorized Txn · confidence 94% · STP · Customer notified via email', time:'09:31', type:'success' },
+  { icon:'⏳', title:'DSP-2026-0887 Awaiting Analyst', body:'Goods Not Received · AED 2,350 · assigned to analyst queue', time:'14:35', type:'warn' },
+  { icon:'🚨', title:'DSP-2026-0879 Escalated', body:'FX Error · Manager review required · SLA: 2h remaining', time:'08:02', type:'error' },
+  { icon:'📧', title:'Email parsed: DSP-2026-0891', body:'Auto-created from customer email · PII scrubbed · FSM started', time:'09:14', type:'info' },
+  { icon:'🔒', title:'PII Scrub Alert', body:'4 scrub events completed today · Presidio engine healthy', time:'17:00', type:'info' },
+];
+
+function initNotifications() {
+  const wrap = document.getElementById('notif-list');
+  if (!wrap) return;
+  wrap.innerHTML = NOTIF_DATA.map(n => `
+    <div class="notif-item">
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span style="font-size:1.1rem">${n.icon}</span>
+        <strong style="font-size:.82rem">${n.title}</strong>
+        <span style="margin-left:auto;font-size:.72rem;color:var(--text-muted)">${n.time}</span>
+      </div>
+      <div style="font-size:.76rem;color:var(--text-muted);margin-top:3px;padding-left:1.6rem">${n.body}</div>
+    </div>`).join('');
+}
+
+function sendNotification() {
+  const type    = document.getElementById('notif-type').value;
+  const channel = document.getElementById('notif-channel').value;
+  const msg     = document.getElementById('notif-msg').value || 'Test notification';
+  const wrap    = document.getElementById('notif-list');
+  if (!wrap) return;
+
+  const icons = {'Dispute Update':'📋','SLA Breach Alert':'🚨','Auto-Resolution Notice':'✅','PII Scrub Alert':'🔒','System Health':'💚'};
+  const icon = icons[type] || '📢';
+  const entry = document.createElement('div');
+  entry.className = 'notif-item';
+  entry.style.borderLeft = '3px solid var(--accent)';
+  entry.innerHTML = `<div style="display:flex;align-items:center;gap:.5rem">
+    <span style="font-size:1.1rem">${icon}</span>
+    <strong style="font-size:.82rem">${type}</strong>
+    <span style="margin-left:auto;font-size:.72rem;color:var(--text-muted)">${new Date().toISOString().slice(11,16)}</span>
+  </div>
+  <div style="font-size:.76rem;color:var(--text-muted);margin-top:3px;padding-left:1.6rem">${msg} · via ${channel}</div>`;
+  wrap.prepend(entry);
+  addAuditEntry('NOTIFICATION_SENT','NOTIF_SVC',`type=${type} · channel=${channel}`,'system');
+  toast(`${icon} Notification sent via ${channel}`);
+}
+
+/* ===================== AUDIT LOG ===================== */
+function sha256Mock(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) { h = ((h << 5) - h + str.charCodeAt(i)) | 0; }
+  return 'sha256:' + Math.abs(h).toString(16).padStart(8,'0') + Math.random().toString(36).slice(2,12) + Math.random().toString(36).slice(2,20);
+}
+
+function addAuditEntry(event, actor, detail, category) {
+  const prev = auditLog.length ? auditLog[auditLog.length-1].hash : '0000000000000000';
+  const ts   = new Date().toISOString();
+  const raw  = `${ts}|${event}|${actor}|${detail}|${prev}`;
+  const hash = sha256Mock(raw);
+  auditLog.push({ ts, event, actor, detail, category, hash, prev });
+  renderAuditLog();
+}
+
+function initAuditLog() {
+  auditLog = [];
+  addAuditEntry('SYSTEM_BOOT',      'CDERA_PLATFORM', 'All 13 services healthy · vLLM+Phi-4 active · Ollama standby', 'system');
+  addAuditEntry('CASE_CREATED',     'EMAIL_PARSER',   'DSP-2026-0892 auto-created from customer email · type: Unauthorized Txn', 'intake');
+  addAuditEntry('PII_SCRUBBED',     'PRESIDIO',       'SCR-f4a2e1b9: 4 entity types scrubbed before inference', 'system');
+  addAuditEntry('AI_ANALYSIS_START','AI_ENGINE',      'LiteLLM → vLLM:Phi-4 14B INT8 · adapter cdera-disputes-v3.2', 'ai');
+  addAuditEntry('AI_ANALYSIS_DONE', 'AI_ENGINE',      'confidence=0.94 · decision=AUTO_RESOLVE · STP eligible', 'ai');
+  addAuditEntry('CASE_RESOLVED',    'WORKFLOW_MGR',   'DSP-2026-0892 AUTO_APPROVED · customer notified via email', 'system');
+}
+
+function renderAuditLog() {
+  const wrap = document.getElementById('audit-entries');
+  if (!wrap) return;
+  const catColors = { system:'#6366f1', intake:'#10b981', ai:'#f59e0b', evidence:'#3b82f6', hitl:'#ec4899' };
+  wrap.innerHTML = [...auditLog].reverse().map(e => `
+    <div class="audit-entry">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span style="font-size:.72rem;color:var(--text-muted)">${e.ts.slice(0,19).replace('T',' ')}</span>
+        <span style="background:${catColors[e.category]||'#6b7280'};color:#fff;border-radius:3px;padding:1px 5px;font-size:.68rem">${e.event}</span>
+        <span style="font-size:.75rem;font-weight:600">${e.actor}</span>
+      </div>
+      <div style="font-size:.77rem;color:var(--text-secondary);margin:.2rem 0">${e.detail}</div>
+      <div style="font-size:.68rem;color:var(--text-muted);word-break:break-all">
+        hash: <span style="color:var(--accent)">${e.hash.slice(0,40)}…</span>
+        &nbsp;|&nbsp;prev: ${e.prev.slice(0,20)}…
+      </div>
+    </div>`).join('');
+}
+
+function verifyChain() {
+  let ok = true;
+  for (let i=1; i<auditLog.length; i++) {
+    if (auditLog[i].prev !== auditLog[i-1].hash) { ok=false; break; }
+  }
+  toast(ok ? '✅ Hash chain verified — ' + auditLog.length + ' entries intact' : '❌ Chain integrity FAILED');
+  addAuditEntry('CHAIN_VERIFIED','AUDIT_SVC',`${auditLog.length} entries · integrity=${ok?'PASS':'FAIL'}`,'system');
+}
+
+/* ===================== METRICS ===================== */
+function refreshMetrics() {
+  const ids = {
+    'metric-total':   ()=> Math.floor(Math.random()*50+47210),
+    'metric-auto':    ()=> (Math.random()*5+60).toFixed(1)+'%',
+    'metric-mttr':    ()=> (Math.random()*0.5+3.1).toFixed(1)+'h',
+    'metric-sla':     ()=> (Math.random()*2+96).toFixed(1)+'%',
+  };
+  Object.entries(ids).forEach(([id,fn]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = fn();
+  });
+}
+
+/* ===================== NAVIGATION ===================== */
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const panel = document.getElementById('panel-'+id);
+  if (panel) panel.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const oc = n.getAttribute('onclick') || '';
+    if (oc.includes("'"+id+"'")) n.classList.add('active');
+  });
+}
+
+function switchTab(btn, tabId) {
+  const panel = btn.closest('.panel');
+  if (panel) panel.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (panel) panel.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  const tab = document.getElementById(tabId);
+  if (tab) tab.style.display = '';
+}
+
+/* ===================== CREATE CASE FROM EMAIL ===================== */
+function createCaseFromEmail() {
+  const result = document.getElementById('email-result');
+  if (!result || !result.innerHTML.trim()) { toast('Parse an email first'); return; }
+  const caseId = 'DSP-2026-' + Math.floor(Math.random()*9000+1000);
+  fsmState = 'EVIDENCE_GATHERING';
+  renderFSM();
+  addAuditEntry('FSM_TRANSITION','WORKFLOW_MGR','RECEIVED → EVIDENCE_GATHERING · channel: Email Parser','system');
+  refreshMetrics();
+  const btn = document.getElementById('create-from-email-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '✅ Case Created'; }
+  toast('✅ '+caseId+' confirmed — navigating to Evidence');
+  setTimeout(() => showPanel('evidence'), 600);
+}
+
+/* ===================== THEME ===================== */
+function toggleTheme() {
+  darkMode = !darkMode;
+  document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = darkMode ? '☀️ Light' : '🌙 Dark';
+}
+
+/* ===================== TOAST ===================== */
+function toast(msg) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

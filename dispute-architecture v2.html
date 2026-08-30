@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispute Agent — C4 Architecture</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --navy:#0C1428;--navy2:#162040;--accent:#1A4FD6;--accent-lt:#E6ECFA;
+  --mid:#3A4A6B;--light:#6B7A9A;--paper:#F5F7FB;--surface:#FFFFFF;
+  --border:#D0D8EC;--human:#D97706;--human-bg:#FEF3C7;
+  --ai:#7B2FE0;--ai-bg:#EDE0FB;--sw:#1A4FD6;--sw-bg:#DBEAFE;
+  --db:#0D7A5F;--db-bg:#D1FAE5;--ext:#64748B;--ext-bg:#F1F5F9;
+  --sidebar-w:248px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:var(--paper);color:var(--navy);display:flex;flex-direction:column;min-height:100vh}
+header{background:var(--navy);color:#fff;padding:14px 24px;display:flex;align-items:center;gap:16px;border-bottom:2px solid var(--accent);position:sticky;top:0;z-index:100}
+.hdr-org{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.hdr-title{font-size:16px;font-weight:700}
+.hdr-sub{font-size:11px;color:#9AAAC8;margin-left:auto}
+.shell{display:flex;flex:1;min-height:0}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--navy2);border-right:1px solid rgba(255,255,255,.07);padding:20px 0 40px;overflow-y:auto;position:sticky;top:49px;height:calc(100vh - 49px)}
+.sb-group{margin-bottom:4px}
+.sb-label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:12px 18px 4px}
+.sb-link{display:block;padding:7px 18px;font-size:12px;font-weight:500;color:rgba(255,255,255,.6);text-decoration:none;cursor:pointer;border-left:2px solid transparent;transition:all .15s}
+.sb-link:hover{color:#fff;background:rgba(255,255,255,.06);border-left-color:rgba(26,79,214,.5)}
+.sb-link.active{color:#fff;background:rgba(26,79,214,.2);border-left-color:var(--accent)}
+.sb-link-sub{padding-left:28px;font-size:11px;color:rgba(255,255,255,.45)}
+.sb-link-sub.active{color:rgba(255,255,255,.9);border-left-color:var(--accent)}
+.main{flex:1;min-width:0;padding:0}
+.section{display:none;padding:32px 40px 60px}
+.section.active{display:block}
+.sec-eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.sec-title{font-size:24px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.sec-desc{font-size:14px;color:var(--mid);line-height:1.6;max-width:75ch;margin-bottom:28px}
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;overflow-x:auto;margin-bottom:24px}
+.mermaid{min-width:600px;font-family:Arial,sans-serif}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:24px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--mid)}
+.legend-dot{width:14px;height:14px;border-radius:4px;flex-shrink:0;border:2px solid transparent}
+.ld-human{background:var(--human-bg);border-color:var(--human)}
+.ld-ai{background:var(--ai-bg);border-color:var(--ai)}
+.ld-sw{background:var(--sw-bg);border-color:var(--sw)}
+.ld-db{background:var(--db-bg);border-color:var(--db)}
+.ld-ext{background:var(--ext-bg);border-color:var(--ext)}
+.callout{background:var(--ai-bg);border:1px solid var(--ai);border-radius:8px;padding:14px 18px;margin-bottom:24px;font-size:13px;color:var(--mid);line-height:1.6}
+.callout strong{color:var(--ai);font-weight:700}
+.callout-finale{background:#1A0A2E;border-color:#4A1A7A;color:#C0A0E0}
+.callout-finale strong{color:#C880FF}
+.rendering-msg{font-size:13px;color:var(--light);padding:24px;text-align:center}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="hdr-org">Hackathon</div>
+    <div class="hdr-title">Card Dispute Evidence Reconstruction &amp; Resolution Agent</div>
+  </div>
+  <span class="hdr-sub">C1–C4 Architecture · Sequence Diagrams · SQLite / Microservices</span>
+</header>
+
+<div class="shell">
+<nav class="sidebar">
+  <div class="sb-group">
+    <div class="sb-label">Overview</div>
+    <a class="sb-link active" onclick="show('c1')">C1 · System Context</a>
+    <a class="sb-link" onclick="show('c2')">C2 · Container View</a>
+  </div>
+  <div class="sb-group">
+    <div class="sb-label">C3 · Components</div>
+    <a class="sb-link sb-link-sub" onclick="show('c3-ei')">Evidence Ingestion</a>
+    <a class="sb-link sb-link-sub" onclick="show('c3-ai')">AI Inference Engine</a>
+    <a class="sb-link sb-link-sub" onclick="show('c3-wf')">Workflow State Mgr</a>
+    <a class="sb-link sb-link-sub" onclick="show('c3-at')">Audit Trail Service</a>
+    <a class="sb-link sb-link-sub" onclick="show('c3-ag')">Approval Gateway</a>
+    <a class="sb-link sb-link-sub" onclick="show('c3-cd')">Conflict Detection</a>
+  </div>
+  <div class="sb-group">
+    <div class="sb-label">On-Prem SLM</div>
+    <a class="sb-link sb-link-sub" onclick="show('slm-arch')">SLM Architecture</a>
+    <a class="sb-link sb-link-sub" onclick="show('slm-finetune')">Fine-Tuning Strategy</a>
+  </div>
+  <div class="sb-group">
+    <div class="sb-label">C4 · Code</div>
+    <a class="sb-link" onclick="show('c4')">Domain Model</a>
+  </div>
+  <div class="sb-group">
+    <div class="sb-label">Sequence Diagrams</div>
+    <a class="sb-link sb-link-sub" onclick="show('seq-01')">SC-01 Dispute Raised</a>
+    <a class="sb-link sb-link-sub" onclick="show('seq-02')">SC-02 Conflict Detected</a>
+    <a class="sb-link sb-link-sub" onclick="show('seq-03')">SC-03 AI Hypothesis</a>
+    <a class="sb-link sb-link-sub" onclick="show('seq-04')">SC-04 Approval Gate</a>
+    <a class="sb-link sb-link-sub" onclick="show('seq-05')">SC-05 Late Evidence ★</a>
+    <a class="sb-link sb-link-sub" onclick="show('seq-06')">SC-06 Failure Recovery</a>
+    <a class="sb-link sb-link-sub" onclick="show('seq-07')">SC-07 Idempotency</a>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- ═══ C1 — SYSTEM CONTEXT ═══ -->
+<section class="section active" id="c1">
+  <div class="sec-eyebrow">C1 — System Context</div>
+  <div class="sec-title">Who uses the system and what does it touch?</div>
+  <div class="sec-desc">Four human actors, five external data sources, and an on-premise GPU inference cluster — all within the financial institution's network perimeter. Cardholder PAN, transaction data, and dispute evidence never leave the institution's boundary. Cloud LLM providers are explicitly excluded as a primary path; inference runs on a locally hosted SLM (Phi-4 / Mistral-7B via vLLM) to satisfy PCI-DSS 4.0, GDPR Article 28, RBI 2018, SAMA, CBUAE, and APRA CPS 234 data residency requirements.</div>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-dot ld-human"></span>Human Actor</span>
+    <span class="legend-item"><span class="legend-dot ld-sw"></span>Our System</span>
+    <span class="legend-item"><span class="legend-dot ld-ai"></span>On-Prem AI Infrastructure</span>
+    <span class="legend-item"><span class="legend-dot ld-ext"></span>External System</span>
+  </div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'primaryColor':'#DBEAFE','primaryTextColor':'#0C1428','primaryBorderColor':'#1A4FD6','lineColor':'#6B7A9A','secondaryColor':'#EDE0FB','tertiaryColor':'#D1FAE5'}}}%%
+flowchart TD
+    classDef human fill:#FEF3C7,stroke:#D97706,color:#7C4700,font-weight:bold
+    classDef system fill:#DBEAFE,stroke:#1A4FD6,color:#1E3A8A,font-weight:bold
+    classDef ai fill:#EDE0FB,stroke:#7B2FE0,color:#4C1D95,font-weight:bold
+    classDef ext fill:#F1F5F9,stroke:#64748B,color:#334155
+
+    CUST["👤 Customer\nCardholder raising a dispute\nReceives resolution outcome"]:::human
+    ANA["👤 Dispute Analyst\nReviews assembled evidence\nApproves routine actions"]:::human
+    MGR["👤 Senior Manager\nApproves high-value decisions\nabove analyst authority limit"]:::human
+    AUD["👤 Compliance Auditor\nAudit case history\nRequests replay and exports"]:::human
+
+    subgraph CDERA["  Financial Institution — Internal Perimeter (Air-gapped capable)  "]
+      AGENT["🤖 Card Dispute Resolution Agent\nAI-powered evidence workspace\nAssembles evidence · Detects conflicts\nCoordinates approvals · Durable case state"]:::system
+      GPU["🖥️ On-Prem GPU Inference Cluster\nvLLM · Phi-4 14B (primary)\nMistral-7B Ollama (fallback)\nQLoRA fine-tuned adapter · Model Registry\nAir-gapped · No data egress"]:::ai
+    end
+
+    CB["🏦 Core Banking System\nTransaction records &amp; account balances"]:::ext
+    CN["💳 Card Network — Visa / MC\nChargeback rules &amp; dispute protocols"]:::ext
+    MP["🏪 Merchant Portal\nSigned receipts &amp; delivery records"]:::ext
+    AS["🔐 Auth Event Store\n3DS events · device fingerprints · biometrics"]:::ext
+    ES["📧 Email / Notification Service\nAnalyst alerts &amp; customer communications"]:::ext
+
+    CUST -->|"Raises dispute / HTTPS"| AGENT
+    ANA -->|"Reviews &amp; approves / HTTPS"| AGENT
+    MGR -->|"High-stakes decisions / HTTPS"| AGENT
+    AUD -->|"Audit &amp; replay / HTTPS"| AGENT
+
+    AGENT <-->|"Local inference / OpenAI-compat REST"| GPU
+    AGENT <-->|"Transaction records / REST"| CB
+    AGENT <-->|"Chargeback rules &amp; submission / REST"| CN
+    AGENT <-->|"Merchant evidence / REST"| MP
+    AGENT -->|"Auth &amp; 3DS event logs / REST"| AS
+    AGENT -->|"Analyst &amp; customer alerts / SMTP"| ES</pre>
+  </div>
+  <div class="callout" style="margin-top:16px">
+    <strong>Regulatory rationale:</strong> PCI-DSS 4.0 Req 4.2 prohibits transmitting PAN or SAD to untrusted third parties. GDPR Art. 28 requires a signed DPA before cardholder PII reaches any processor — major LLM vendors do not qualify. RBI 2018 mandates India-only storage for payment system data. SAMA / CBUAE require in-country residency for Saudi / UAE payment data. APRA CPS 234 makes external AI outsourcing a board-level risk item. On-prem SLM eliminates all of these blockers before the ROI conversation begins.
+  </div>
+</section>
+
+<!-- ═══ C2 — CONTAINER VIEW ═══ -->
+<section class="section" id="c2">
+  <div class="sec-eyebrow">C2 — Container Diagram</div>
+  <div class="sec-title">Microservices, databases, event bus, and on-prem inference cluster</div>
+  <div class="sec-desc">Eleven microservices communicating over a Redis event bus, three SQLite databases (dispute, workflow, audit-only), a <strong>Channel Gateway</strong> normalising five inbound intake channels (Mobile App 42%, Email Parser 34%, Merchant Portal 12%, Card Network 4%, IVR/Branch 8%) and routing all case-creation requests to the Dispute Manager, an API gateway as the single human-facing entry point, and a two-tier on-prem SLM cluster (vLLM primary + Ollama fallback) exposing an OpenAI-compatible REST API internally. The <strong>Presidio PII Scrubber</strong> is a mandatory checkpoint before every inference call — it strips and tokenises sensitive fields and writes an audit log entry per scrub. The Model Registry tracks adapter versions and GPU endpoints. All inference traffic stays inside the institution's perimeter.</div>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-dot ld-human"></span>Human Actor</span>
+    <span class="legend-item"><span class="legend-dot ld-sw"></span>Service</span>
+    <span class="legend-item"><span class="legend-dot ld-ai"></span>AI Component</span>
+    <span class="legend-item"><span class="legend-dot ld-db"></span>Database</span>
+    <span class="legend-item"><span class="legend-dot ld-ext"></span>External System</span>
+  </div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'primaryColor':'#DBEAFE','primaryTextColor':'#0C1428','primaryBorderColor':'#1A4FD6','lineColor':'#6B7A9A','secondaryColor':'#EDE0FB','tertiaryColor':'#D1FAE5'}}}%%
+flowchart TB
+    classDef human fill:#FEF3C7,stroke:#D97706,color:#7C4700,font-weight:bold
+    classDef svc fill:#DBEAFE,stroke:#1A4FD6,color:#1E3A8A
+    classDef ai fill:#EDE0FB,stroke:#7B2FE0,color:#4C1D95,font-weight:bold
+    classDef db fill:#D1FAE5,stroke:#0D7A5F,color:#064E3B,shape:cylinder
+    classDef bus fill:#FEF3C7,stroke:#D97706,color:#92400E,font-weight:bold
+    classDef ext fill:#F1F5F9,stroke:#64748B,color:#334155
+    classDef gw fill:#CCFBF1,stroke:#0D9488,color:#134E4A,font-weight:bold
+    classDef pii fill:#FFFBEB,stroke:#D97706,color:#92400E,font-weight:bold,stroke-width:3px
+
+    ANA(["👤 Analyst"]):::human
+    MGR(["👤 Manager"]):::human
+    AUD(["👤 Auditor"]):::human
+    CUST(["👤 Customer"]):::human
+
+    EXT_CB["🏦 Core Banking"]:::ext
+    EXT_CN["💳 Card Network"]:::ext
+    EXT_MP["🏪 Merchant Portal"]:::ext
+    EXT_ES["📧 Email Service"]:::ext
+
+    CH_MOB["📱 Mobile App\n42% volume · REST"]:::ext
+    CH_EML["📧 Email Parser\n34% volume · IMAP"]:::ext
+    CH_MRC["🏪 Merchant Portal\n12% volume · Webhook"]:::ext
+    CH_CNT["🌐 Card Network\n4% volume · ISO 8583"]:::ext
+    CH_IVR["📞 IVR / Branch\n8% volume · SIP/Manual"]:::ext
+    CGW["📡 Channel Gateway\nRoute &amp; normalise all intake\nFastAPI · Python"]:::gw
+
+    subgraph SYS["  Card Dispute Resolution Agent — Microservices  "]
+      APIGW["API Gateway\nNginx · FastAPI\nJWT auth / rate-limit"]:::svc
+      DM["Dispute Manager\nFastAPI · Python\nCase lifecycle &amp; state"]:::svc
+      EI["Evidence Ingestion\nFastAPI · Python\nValidate · Normalise · Tag"]:::svc
+      AI["AI Inference Engine\nPython · LiteLLM router\nHypothesis · Bayesian Scoring"]:::ai
+      WF["Workflow State Mgr\nPython · FSM\nCheckpoint · Deadline · Recovery"]:::svc
+      CD["Conflict Detection\nPython\nContradiction · Gap · Staleness"]:::svc
+      AG["Approval Gateway\nFastAPI + React\nRBAC · Queues · Decisions"]:::svc
+      AT["Audit Trail\nFastAPI · Python\nAppend-only · Replay · Export"]:::svc
+      NS["Notification Svc\nPython asyncio\nEmail · SMS · Push"]:::svc
+      CB["Context Builder\nPython\nCase assembly for SLM prompt"]:::ai
+      ASN["Assignment Svc\nPython\nWorkload balancing"]:::svc
+      PIIS["🔒 Presidio PII Scrubber\nMicrosoft Presidio — Mandatory\nMask · Tokenise · Redact"]:::pii
+      EB(["⚡ Event Bus\nRedis Pub/Sub"]):::bus
+      DisDB[("Dispute DB\nSQLite WAL")]:::db
+      WfDB[("Workflow DB\nSQLite WAL")]:::db
+      AuDB[("Audit DB\nSQLite append-only")]:::db
+      MrDB[("Model Registry\nSQLite\nAdapters · Endpoints")]:::db
+
+      subgraph GPU_CLUSTER["  On-Prem GPU Inference Cluster  "]
+        VLLM["vLLM Server\nPhi-4 14B · INT8\nOpenAI-compat API\n:8080"]:::ai
+        OLLM["Ollama Fallback\nMistral-7B-Instruct\nQuantized · :11434"]:::ai
+      end
+    end
+
+    CH_MOB & CH_EML & CH_MRC & CH_CNT & CH_IVR -->|intake| CGW
+    CGW -->|"case creation"| DM
+    CUST & ANA & MGR & AUD -->|HTTPS| APIGW
+    APIGW --> DM & AG & AT
+    DM --> DisDB & EB
+    EI --> DisDB & EB
+    EI <-->|REST| EXT_MP & EXT_CB
+    CB --> DisDB --> AI
+    AI --> PIIS --> VLLM
+    VLLM -->|"on-prem fail"| OLLM
+    VLLM & OLLM --> MrDB
+    AI --> DisDB & EB
+    WF --> WfDB & EB
+    CD --> DisDB & EB
+    AG --> WfDB & EB
+    AT --> AuDB
+    NS -->|SMTP/API| EXT_ES
+    DM <-->|REST| EXT_CN
+    EB -->|subscribe| EI & AI & WF & CD & AT & NS & ASN & CB</pre>
+  </div>
+</section>
+
+<!-- ═══ C3 — EVIDENCE INGESTION ═══ -->
+<section class="section" id="c3-ei">
+  <div class="sec-eyebrow">C3 — Component Diagram · Evidence Ingestion Service</div>
+  <div class="sec-title">Inside the Evidence Ingestion microservice</div>
+  <div class="sec-desc">Eight components handle the complete ingestion pipeline — from receiving raw evidence to publishing a normalised, provenance-tagged event on the bus. Every step is idempotency-guarded. External data is fetched asynchronously after local validation passes.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'primaryColor':'#DBEAFE','primaryTextColor':'#0C1428','primaryBorderColor':'#1A4FD6','lineColor':'#6B7A9A'}}}%%
+flowchart LR
+    classDef sw fill:#DBEAFE,stroke:#1A4FD6,color:#1E3A8A
+    classDef ai fill:#EDE0FB,stroke:#7B2FE0,color:#4C1D95
+    classDef db fill:#D1FAE5,stroke:#0D7A5F,color:#064E3B
+    classDef ext fill:#F1F5F9,stroke:#64748B,color:#334155
+    classDef bus fill:#FEF3C7,stroke:#D97706,color:#92400E
+
+    RCV["HTTP Receiver\nFastAPI endpoint\nAccepts multipart/JSON"]:::sw
+    VAL["Schema Validator\nPydantic v2\nStrict mode"]:::sw
+    IDM["Idempotency Guard\nRedis SET NX\nstable key = hash(case+source+content)"]:::sw
+    NRM["Document Normaliser\nApache Tika + Tesseract\nPDF·DOCX·IMG→text"]:::sw
+    PTG["Provenance Tagger\nCustom module\nsource-system-fact|ai-inference|..."]:::sw
+    EFT["External Fetcher\nhttpx async\nCore Banking · Auth Store · Delivery"]:::sw
+    REP["Evidence Repository\nSQLAlchemy + SQLite\nAppend EvidenceItem + EvidenceVersion"]:::db
+    PUB["Event Publisher\nRedis Pub/Sub\nevidence.ingested"]:::bus
+
+    EXT_SRC["External Sources\nCore Banking · Merchant\nDelivery · Auth Store"]:::ext
+
+    RCV --> VAL --> IDM --> NRM --> PTG --> REP --> PUB
+    PTG --> EFT --> REP
+    EFT <-->|"REST/HTTPS"| EXT_SRC</pre>
+  </div>
+</section>
+
+<!-- ═══ C3 — AI INFERENCE ENGINE ═══ -->
+<section class="section" id="c3-ai">
+  <div class="sec-eyebrow">C3 — Component Diagram · AI Inference Engine</div>
+  <div class="sec-title">Inside the AI Inference Engine microservice</div>
+  <div class="sec-desc">Thirteen components implement a fully on-premise, regulation-compliant inference pipeline. The <strong>Presidio PII Scrubber</strong> (mandatory security checkpoint) strips and tokenises sensitive fields before every model call — no prompt ever reaches the SLM or cloud fallback without passing through it. LiteLLM routes to the on-prem vLLM server (Phi-4 14B, QLoRA-adapted) as primary, falls back to on-prem Ollama (Mistral-7B) on degraded state, and only reaches a cloud endpoint as a last resort — with pre-scrubbed input and explicit audit logging. The Model Registry tracks which adapter version served each inference. Bayesian confidence gates STP vs. human routing; deepDiff material-change detection prevents redundant re-scoring.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'primaryColor':'#EDE0FB','primaryTextColor':'#0C1428','primaryBorderColor':'#7B2FE0','lineColor':'#6B7A9A'}}}%%
+flowchart LR
+    classDef sw fill:#DBEAFE,stroke:#1A4FD6,color:#1E3A8A
+    classDef ai fill:#EDE0FB,stroke:#7B2FE0,color:#4C1D95,font-weight:bold
+    classDef db fill:#D1FAE5,stroke:#0D7A5F,color:#064E3B
+    classDef bus fill:#FEF3C7,stroke:#D97706,color:#92400E
+    classDef ext fill:#F1F5F9,stroke:#64748B,color:#334155
+    classDef warn fill:#FEE2E2,stroke:#DC2626,color:#7F1D1D
+    classDef pii fill:#FFFBEB,stroke:#D97706,color:#92400E,font-weight:bold,stroke-width:3px
+
+    EVT["Event Consumer\nRedis subscriber\nevidence.ingested"]:::sw
+    CTX["Context Builder\nSQLAlchemy reads\nCase+Evidence+History"]:::ai
+    PRB["Prompt Builder\nJinja2 templates\nFew-shot + JSON schema"]:::ai
+    PIIS["🔒 Presidio PII Scrubber\nMicrosoft Presidio — Mandatory\nMask·Tokenise·Redact\nAudit log every field"]:::pii
+    CAC["Inference Cache\nRedis TTL 4h\nkey=SHA256(context+adapter)"]:::sw
+    VLLM["On-Prem SLM Primary\nvLLM · Phi-4 14B INT8\nQLoRA dispute adapter\nOpenAI-compat :8080"]:::ai
+    OLLM["On-Prem SLM Fallback\nOllama · Mistral-7B-Instruct\nQuantized INT4 · :11434"]:::ai
+    CLOUD["Cloud LLM\nLast resort — PII-stripped only\nAudit log required · CISO approval"]:::warn
+    MREG[("Model Registry\nAdapter version\nEndpoint health")]:::db
+    PRS["Hypothesis Parser\nPydantic v2\nStructured JSON output"]:::ai
+    SCR["Evidence Scorer\nscikit-learn weights\nRecency·Reliability·Consistency"]:::ai
+    CON["Confidence Calculator\nBayesian — scipy.stats Beta\n>0.90 STP · 0.75 Analyst · <0.50 Mgr"]:::ai
+    MCD["Material Change Detector\ndeepDiff · threshold=0.60\nPrevents redundant re-score"]:::sw
+    PUB["Result Publisher\nRedis Pub/Sub\nhypothesis.generated"]:::bus
+
+    EVT --> CTX --> PRB --> PIIS --> CAC
+    CAC -->|"cache miss"| VLLM
+    VLLM -->|"health fail"| OLLM
+    OLLM -->|"degraded — PII-scrubbed"| CLOUD
+    VLLM & OLLM & CLOUD --> PRS
+    VLLM & OLLM --> MREG
+    PRS --> SCR --> CON --> MCD --> PUB
+    CAC -->|"cache hit"| PUB</pre>
+  </div>
+  <div class="callout" style="margin-top:0">
+    <strong>On-prem SLM candidates:</strong> Phi-4 14B (MIT licence, fits 2×A100 or 1×H100, excellent document comprehension) as primary · Mistral-7B-Instruct-v0.3 (Apache 2.0, widely deployed across EU banks, proven in production) as fallback · Qwen2.5-7B-Instruct (Apache 2.0, best instruction-following at 7B class) as an alternative fallback · QLoRA fine-tuning on synthetic dispute bundles converts the base model into a domain specialist in ~4h on a single A100.
+  </div>
+</section>
+
+<!-- ═══ C3 — WORKFLOW STATE MANAGER ═══ -->
+<section class="section" id="c3-wf">
+  <div class="sec-eyebrow">C3 — Component Diagram · Workflow State Manager</div>
+  <div class="sec-title">Inside the Workflow State Manager microservice</div>
+  <div class="sec-desc">Seven components manage the durable case lifecycle. The FSM enforces valid state transitions. Every transition is checkpointed to SQLite. A built-in idempotency store prevents double-processing of replayed events. APScheduler tracks deadlines. The Recovery Orchestrator replays from the last good checkpoint on startup.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'primaryColor':'#FEF3C7','primaryTextColor':'#0C1428','primaryBorderColor':'#D97706','lineColor':'#6B7A9A'}}}%%
+flowchart LR
+    classDef sw fill:#DBEAFE,stroke:#1A4FD6,color:#1E3A8A
+    classDef wf fill:#FEF3C7,stroke:#D97706,color:#92400E,font-weight:bold
+    classDef db fill:#D1FAE5,stroke:#0D7A5F,color:#064E3B
+    classDef bus fill:#FEF3C7,stroke:#D97706,color:#92400E
+
+    EVT["Event Consumer\nRedis subscriber\nAll domain events"]:::sw
+    FSM["State Machine\npython-transitions FSM\nCREATED→ANALYSIS→RESOLVED"]:::wf
+    CPW["Checkpoint Writer\nSQLAlchemy INSERT\nWorkflow DB — after each transition"]:::db
+    IDM["Idempotency Store\nSQLite unique(case+event_id)\nPrevents double-processing on replay"]:::sw
+    SCH["Deadline Scheduler\nAPScheduler asyncio\n80% warning · 100% breach"]:::wf
+    REC["Recovery Orchestrator\nCheckpoint read on startup\nReplay from last good state"]:::wf
+    ACT["Action Coordinator\nasyncio.gather\nFan-out to EI, AI, AG, NS"]:::sw
+    PUB["State Publisher\nRedis Pub/Sub\nworkflow.state.changed"]:::bus
+    WfDB[("Workflow DB\nSQLite WAL")]:::db
+
+    EVT --> FSM --> IDM
+    FSM --> CPW --> WfDB
+    FSM --> ACT --> PUB
+    SCH --> FSM
+    REC -->|on startup| WfDB
+    REC --> FSM</pre>
+  </div>
+</section>
+
+<!-- ═══ C3 — AUDIT TRAIL ═══ -->
+<section class="section" id="c3-at">
+  <div class="sec-eyebrow">C3 — Component Diagram · Audit Trail Service</div>
+  <div class="sec-title">Inside the Audit Trail microservice</div>
+  <div class="sec-desc">Seven components capture every domain event from all channels, tag provenance, write to an append-only hash-chained SQLite store, replicate to a secondary volume, and expose query, replay, and export capabilities. Exports are cryptographically signed. The replay engine can reconstruct case state at any point in time for regulatory review.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'primaryColor':'#D1FAE5','primaryTextColor':'#0C1428','primaryBorderColor':'#0D7A5F','lineColor':'#6B7A9A'}}}%%
+flowchart LR
+    classDef sw fill:#DBEAFE,stroke:#1A4FD6,color:#1E3A8A
+    classDef db fill:#D1FAE5,stroke:#0D7A5F,color:#064E3B,font-weight:bold
+    classDef bus fill:#FEF3C7,stroke:#D97706,color:#92400E
+
+    RCV["Event Receiver\nRedis subscriber ALL channels\nCaptures every domain event"]:::sw
+    PTG["Provenance Tagger\nSame vocab as EI tagger\nEnd-to-end provenance continuity"]:::sw
+    WRT["Append-Only Writer\nSQLAlchemy INSERT only\nHash-chained — no UPDATE/DELETE"]:::db
+    REP["Replicator\nLitestream / rsync\nSecondary SQLite volume"]:::db
+    QRY["Query Engine\nFastAPI + SQLAlchemy\nFilter·paginate·time-range"]:::sw
+    RPL["Replay Engine\nEvent sequence replay\nPoint-in-time state reconstruction"]:::sw
+    EXP["Export Generator\nReportLab PDF + openpyxl\nCryptographic signature — PyNaCl"]:::sw
+    AuDB[("Audit DB\nSQLite append-only\nHash-chained records")]:::db
+
+    RCV --> PTG --> WRT --> AuDB
+    AuDB --> REP
+    AuDB --> QRY & RPL & EXP</pre>
+  </div>
+</section>
+
+<!-- ═══ C3 — APPROVAL GATEWAY ═══ -->
+<section class="section" id="c3-ag">
+  <div class="sec-eyebrow">C3 — Component Diagram · Human Approval Gateway</div>
+  <div class="sec-title">Inside the Human Approval Gateway microservice</div>
+  <div class="sec-desc">Seven components enforce role-based access, route actions to the appropriate human queue (analyst or manager), track SLA compliance, and record decisions immutably. All human decisions carry mandatory rationale. The RBAC enforcer runs server-side on every request — no client-side trust.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'primaryColor':'#D1FAE5','primaryTextColor':'#0C1428','primaryBorderColor':'#0D7A5F','lineColor':'#6B7A9A'}}}%%
+flowchart LR
+    classDef sw fill:#DBEAFE,stroke:#1A4FD6,color:#1E3A8A
+    classDef human fill:#FEF3C7,stroke:#D97706,color:#92400E,font-weight:bold
+    classDef db fill:#D1FAE5,stroke:#0D7A5F,color:#064E3B
+    classDef bus fill:#FEF3C7,stroke:#D97706,color:#92400E
+
+    RBAC["RBAC Enforcer\npython-jose JWT\nRS256 · role validation"]:::sw
+    RTR["Approval Router\nRule engine\nAmount · type · confidence · SLA"]:::sw
+    AQ["Analyst Queue\nRedis Sorted Set\nPriority by amount+SLA+severity"]:::human
+    MQ["Manager Queue\nRedis Sorted Set\nHigh-value · breach · appeal cases"]:::human
+    SLA["SLA Tracker\nAPScheduler\n75% warning · 100% escalation"]:::sw
+    DRC["Decision Recorder\nSQLAlchemy INSERT\nImmutable: decision+rationale+hash"]:::db
+    UI["Approval UI Backend\nFastAPI + SSE\nCase view · evidence · AI summary"]:::sw
+    WfDB[("Workflow DB\nSQLite WAL")]:::db
+    PUB["Result Publisher\nRedis Pub/Sub\napproval.decision"]:::bus
+
+    RBAC --> RTR --> AQ & MQ
+    AQ & MQ --> UI --> DRC --> WfDB
+    DRC --> PUB
+    SLA --> AQ & MQ</pre>
+  </div>
+</section>
+
+<!-- ═══ C3 — CONFLICT DETECTION ═══ -->
+<section class="section" id="c3-cd">
+  <div class="sec-eyebrow">C3 — Component Diagram · Conflict Detection Service</div>
+  <div class="sec-title">Inside the Conflict Detection microservice</div>
+  <div class="sec-desc">Eight components evaluate incoming evidence against the existing evidence set to detect contradictions, gaps, staleness, and severity. Material conflicts (score &gt; 0.60) trigger workflow pause and AI re-evaluation. All conflicts are registered in an append-only conflict log and published to downstream services.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'primaryColor':'#FBE9E7','primaryTextColor':'#0C1428','primaryBorderColor':'#B8301F','lineColor':'#6B7A9A'}}}%%
+flowchart LR
+    classDef sw fill:#DBEAFE,stroke:#1A4FD6,color:#1E3A8A
+    classDef cd fill:#FBE9E7,stroke:#B8301F,color:#7F1D1D,font-weight:bold
+    classDef db fill:#D1FAE5,stroke:#0D7A5F,color:#064E3B
+    classDef bus fill:#FEF3C7,stroke:#D97706,color:#92400E
+
+    EVT["Event Consumer\nRedis subscriber\nevidence.ingested"]:::sw
+    CON["Contradiction Detector\nRule engine + sentence-transformers\nSemantic similarity comparison"]:::cd
+    MAT["Materialness Assessor\nWeighted scoring\nthreshold=0.60 → re-evaluate"]:::cd
+    GAP["Gap Analyser\nEvidence checklist rules\nRequired types per dispute category"]:::cd
+    STL["Staleness Checker\nTimestamp policy rules\nBank statement &gt;90d · txn &gt;30d"]:::cd
+    SVR["Severity Ranker\nRule classifier\nLOW·MED·HIGH·CRITICAL"]:::cd
+    REG["Conflict Register\nSQLAlchemy INSERT\nAppend-only conflict log"]:::db
+    ALT["Alert Publisher\nRedis Pub/Sub + webhook\nconflict.detected"]:::bus
+
+    EVT --> CON & GAP & STL
+    CON --> MAT --> SVR --> REG --> ALT
+    GAP --> SVR
+    STL --> SVR</pre>
+  </div>
+</section>
+
+<!-- ═══ ON-PREM SLM ARCHITECTURE ═══ -->
+<section class="section" id="slm-arch">
+  <div class="sec-eyebrow">On-Prem SLM · Architecture</div>
+  <div class="sec-title">Regulation-compliant inference — inside the institution's perimeter</div>
+  <div class="sec-desc">The SLM inference cluster is a two-tier on-prem deployment serving the AI Inference Engine over an OpenAI-compatible REST API. No model input or output crosses the institution's network boundary. The QLoRA adapter is the only artefact trained outside the cluster and is deployed alongside the base weights at launch time.</div>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-dot ld-ai"></span>On-Prem AI</span>
+    <span class="legend-item"><span class="legend-dot ld-sw"></span>Software Component</span>
+    <span class="legend-item"><span class="legend-dot ld-db"></span>Storage</span>
+    <span class="legend-item"><span class="legend-dot ld-ext"></span>Last-Resort / External</span>
+  </div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'primaryColor':'#EDE0FB','primaryTextColor':'#0C1428','primaryBorderColor':'#7B2FE0','lineColor':'#6B7A9A'}}}%%
+flowchart TB
+    classDef sw fill:#DBEAFE,stroke:#1A4FD6,color:#1E3A8A
+    classDef ai fill:#EDE0FB,stroke:#7B2FE0,color:#4C1D95,font-weight:bold
+    classDef db fill:#D1FAE5,stroke:#0D7A5F,color:#064E3B
+    classDef ext fill:#F1F5F9,stroke:#64748B,color:#334155
+    classDef warn fill:#FEE2E2,stroke:#DC2626,color:#7F1D1D
+    classDef pii fill:#FFFBEB,stroke:#D97706,color:#92400E,font-weight:bold,stroke-width:3px
+
+    AIE["AI Inference Engine\nPort 8003\nLiteLLM Router"]:::sw
+
+    subgraph PERIMETER["  Institution Network Perimeter — Air-gapped capable  "]
+      PIIS["🔒 Presidio PII Scrubber\nMicrosoft Presidio — Mandatory\nRuns before every inference call"]:::pii
+
+      subgraph TIER1["  Tier 1 — Primary (vLLM)  "]
+        GPU1["GPU Node 1\n2× A100 80GB\nor 1× H100"]:::ai
+        GPU2["GPU Node 2\n2× A100 80GB\n(HA pair)"]:::ai
+        VLLM["vLLM Inference Server\nPhi-4 14B · INT8 quantized\nOpenAI-compat REST :8080\nQLoRA adapter loaded"]:::ai
+      end
+
+      subgraph TIER2["  Tier 2 — Fallback (Ollama)  "]
+        OLLM["Ollama Server\nMistral-7B-Instruct-v0.3\nINT4 quantized · :11434\nFits single RTX 3090 / A10G"]:::ai
+      end
+
+      MREG[("Model Registry\nSQLite\nadapter_versions\nendpoint_health")]:::db
+      ADAP["QLoRA Adapter\ndispute-classification-v2\nTrained on synthetic bundles\nLoaded alongside base weights"]:::ai
+    end
+
+    CLOUD["Cloud LLM\nLast resort only\nPII-stripped payload\nExplicit audit log required"]:::warn
+
+    AIE --> PIIS
+    PIIS --> VLLM
+    GPU1 & GPU2 --- VLLM
+    VLLM -->|"on-prem fail"| OLLM
+    OLLM -->|"both tiers fail"| CLOUD
+    VLLM & OLLM --> MREG
+    ADAP -->|"loaded at startup"| VLLM</pre>
+  </div>
+  <div class="callout">
+    <strong>Model selection rationale:</strong>
+    Phi-4 (14B, MIT) — Microsoft's strongest reasoning SLM; excellent document comprehension; fits 2×A100 or 1×H100; recommended primary.
+    Mistral-7B-Instruct-v0.3 (Apache 2.0) — proven in EU bank production; fits single A10G; ideal fallback.
+    Qwen2.5-7B-Instruct (Apache 2.0) — best instruction-following at 7B class; strong on multilingual disputes (AE, SG, IN jurisdictions).
+    DeepSeek-R1-Distill-Qwen-7B (MIT) — chain-of-thought reasoning distilled from R1; strong on multi-hop evidence conflicts; use after legal review of training data provenance.
+    Hardware footprint for 500 disputes/day: 2×A100 80GB on Tier-1. Capital cost ≈ 18 months of GPT-4o API spend at this volume; compliance posture improvement is irreversible.
+  </div>
+</section>
+
+<!-- ═══ ON-PREM SLM FINE-TUNING ═══ -->
+<section class="section" id="slm-finetune">
+  <div class="sec-eyebrow">On-Prem SLM · Fine-Tuning Strategy</div>
+  <div class="sec-title">QLoRA domain adaptation — dispute intelligence from synthetic data</div>
+  <div class="sec-desc">A QLoRA fine-tune converts a general-purpose base SLM into a dispute-classification specialist in approximately 4 hours on a single A100, using synthetic training data generated from the scenario library. The adapter is the only training artefact; base weights stay untouched and on-prem. As real anonymised cases accumulate inside the institution, the adapter is updated in subsequent training runs entirely within the perimeter.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'primaryColor':'#DBEAFE','primaryTextColor':'#0C1428','primaryBorderColor':'#1A4FD6','lineColor':'#6B7A9A'}}}%%
+flowchart LR
+    classDef sw fill:#DBEAFE,stroke:#1A4FD6,color:#1E3A8A
+    classDef ai fill:#EDE0FB,stroke:#7B2FE0,color:#4C1D95,font-weight:bold
+    classDef db fill:#D1FAE5,stroke:#0D7A5F,color:#064E3B
+    classDef human fill:#FEF3C7,stroke:#D97706,color:#7C4700,font-weight:bold
+
+    SCEN["Scenario Library\n42 base scenarios\nExcel + domain rules"]:::db
+    GEN["Synthetic Data Generator\nPython · expand to 5K-10K bundles\nVaried evidence combos\nKnown ground-truth outcomes"]:::sw
+    FMT["Instruction Formatter\nConvert bundles → QLoRA format\ninput: case+evidence JSON\noutput: hypothesis+recommendation"]:::sw
+    TRAIN["QLoRA Fine-Tune\nPEFT + LoRA on base SLM\nSingle A100 · ~4 hours\ndispute classification task"]:::ai
+    EVAL["Evaluation\nHeld-out 20% validation set\nF1 · Accuracy · Calibration\nMin threshold before deploy"]:::sw
+    ADAP["QLoRA Adapter\ndispute-classification-vN\nDeployed alongside base weights"]:::ai
+    DEPLOY["vLLM Server\nAdapter loaded at startup\nZero base-weight modification"]:::ai
+    REAL["Real Anonymised Cases\nAccumulate over time\nInstitution perimeter only\nBootstrap next adapter version"]:::db
+
+    SCEN --> GEN --> FMT --> TRAIN --> EVAL --> ADAP --> DEPLOY
+    REAL -->|"next training cycle"| FMT</pre>
+  </div>
+  <div class="callout">
+    <strong>Data strategy:</strong> Synthetic data bootstraps the first adapter — no labelled real cases needed at launch. The model learns the output schema (structured JSON: recommendation, confidence, reasoning, evidence_weight_map), the Reg-E / Visa / MC domain vocabulary, and the jurisdiction-specific rules. As real anonymised cases accumulate inside the perimeter they update the adapter in subsequent runs. The training pipeline itself runs on-prem; the only external dependency is the one-time base weight download at deployment.
+  </div>
+</section>
+
+<!-- ═══ C4 — DOMAIN MODEL ═══ -->
+<section class="section" id="c4">
+  <div class="sec-eyebrow">C4 — Code / Domain Model</div>
+  <div class="sec-title">Core domain classes and their relationships</div>
+  <div class="sec-desc">Seven domain classes form the backbone of the system. EvidenceItem is versioned — materialness changes create a new EvidenceVersion rather than mutating the original. AuditEvent is append-only and hash-chained. All human decisions are captured as ApprovalRequest records with mandatory rationale.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'primaryColor':'#DBEAFE','primaryTextColor':'#0C1428','primaryBorderColor':'#1A4FD6','lineColor':'#6B7A9A'}}}%%
+classDiagram
+    class DisputeCase {
+        +UUID case_id
+        +String customer_id
+        +Decimal disputed_amount
+        +String currency_code
+        +String state
+        +String dispute_category
+        +DateTime created_at
+        +DateTime deadline
+        +String idempotency_key
+        +create()
+        +transition(new_state)
+        +is_past_deadline()
+    }
+    class EvidenceItem {
+        +UUID evidence_id
+        +UUID case_id
+        +String source_system
+        +String evidence_type
+        +String provenance_tag
+        +Integer current_version
+        +DateTime received_at
+        +add_version(content)
+        +latest_version()
+    }
+    class EvidenceVersion {
+        +UUID version_id
+        +UUID evidence_id
+        +Integer version_number
+        +String content_hash
+        +JSON normalised_content
+        +DateTime created_at
+        +Boolean is_stale
+        +Float materialness_score
+    }
+    class Hypothesis {
+        +UUID hypothesis_id
+        +UUID case_id
+        +String hypothesis_text
+        +String reasoning
+        +Float confidence_score
+        +String model_used
+        +String prompt_version
+        +JSON evidence_links
+        +DateTime generated_at
+        +is_auto_resolvable()
+    }
+    class AuditEvent {
+        +UUID event_id
+        +UUID case_id
+        +String event_type
+        +String actor_id
+        +String provenance_tag
+        +JSON payload
+        +String prior_hash
+        +String this_hash
+        +DateTime timestamp
+    }
+    class ApprovalRequest {
+        +UUID approval_id
+        +UUID case_id
+        +String required_role
+        +String action_type
+        +Decimal action_value
+        +String status
+        +String decision
+        +String rationale
+        +String decided_by
+        +DateTime decided_at
+        +is_within_authority()
+    }
+    class WorkflowCheckpoint {
+        +UUID checkpoint_id
+        +UUID case_id
+        +String state
+        +Integer last_event_seq
+        +JSON context_snapshot
+        +String checksum
+        +DateTime created_at
+        +validate_integrity()
+    }
+
+    DisputeCase "1" --> "many" EvidenceItem : contains
+    EvidenceItem "1" --> "many" EvidenceVersion : versioned_as
+    DisputeCase "1" --> "many" Hypothesis : has
+    DisputeCase "1" --> "many" AuditEvent : logged_in
+    DisputeCase "1" --> "many" ApprovalRequest : requires
+    DisputeCase "1" --> "many" WorkflowCheckpoint : checkpointed_by</pre>
+  </div>
+</section>
+
+<!-- ═══ SEQ-01 — DISPUTE RAISED ═══ -->
+<section class="section" id="seq-01">
+  <div class="sec-eyebrow">Sequence Diagram · SC-01</div>
+  <div class="sec-title">Dispute Raised — Customer to Analyst Assignment</div>
+  <div class="sec-desc">End-to-end flow from customer submission through evidence ingestion, context building, AI enrichment, and analyst assignment. The idempotency key is set at case creation so duplicate submissions from the same customer are safely rejected. The SLA clock starts when the case is created.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'actorBkg':'#0C1428','actorBorder':'#1A4FD6','actorTextColor':'#FFFFFF','actorLineColor':'#6B7A9A','signalColor':'#3A4A6B','signalTextColor':'#0C1428','noteBkgColor':'#FEF3C7','noteTextColor':'#92400E','noteBorderColor':'#D97706','labelBoxBkgColor':'#E6ECFA','labelBoxBorderColor':'#1A4FD6'}}}%%
+sequenceDiagram
+    actor C as Customer
+    participant GW as API Gateway
+    participant DM as Dispute Manager
+    participant EB as Event Bus
+    participant EI as Evidence Ingestion
+    participant CB as Context Builder
+    participant AI as AI Inference Engine
+    participant WF as Workflow State Mgr
+    participant AT as Audit Trail
+    participant NS as Notification Svc
+    actor ANA as Dispute Analyst
+
+    C->>GW: POST /disputes {amount, merchant, date, channel}
+    GW->>GW: JWT validation + rate-limit check
+    GW->>DM: Forward request
+    DM->>DM: Compute idempotency_key = hash(customer+merchant+date+amount)
+    DM->>DM: Check — key NOT found — proceed
+    DM->>DM: Create DisputeCase {state=CREATED, SLA clock=T+0}
+    DM->>AT: LOG dispute.created {case_id, actor=customer, provenance=user-input}
+    DM->>EB: PUBLISH dispute.created {case_id, customer_id, amount}
+    DM-->>GW: 201 Created {case_id, estimated_resolution}
+    GW-->>C: 201 Created
+
+    Note over EI,CB: Evidence pipeline runs in parallel
+    EI->>EI: Ingest initial claim {provenance=user-input}
+    EI->>EI: Fetch tx record from Core Banking {provenance=source-system-fact}
+    EI->>EI: Normalise + tag + store EvidenceItems
+    EI->>EB: PUBLISH evidence.ingested {case_id, evidence_ids[]}
+    AT->>AT: LOG evidence.ingested {provenance chain}
+
+    CB->>CB: Assemble case context {DisputeCase + EvidenceItems + history}
+    CB->>AI: Context ready — trigger inference
+    AI->>AI: Build prompt + call LLM + parse hypothesis
+    AI->>AI: Score evidence + calculate confidence
+    AI->>EB: PUBLISH hypothesis.generated {case_id, confidence=0.72}
+    AT->>AT: LOG hypothesis.generated {model, prompt_version, evidence_links}
+
+    WF->>WF: Transition CREATED → EVIDENCE_COLLECTION → HUMAN_REVIEW
+    WF->>WF: Assign to analyst queue (priority by amount + SLA)
+    NS->>ANA: NOTIFY new case assigned {case_id, AI summary, SLA deadline}
+    AT->>AT: LOG workflow.state.changed {CREATED→HUMAN_REVIEW}</pre>
+  </div>
+</section>
+
+<!-- ═══ SEQ-02 — CONFLICT DETECTION ═══ -->
+<section class="section" id="seq-02">
+  <div class="sec-eyebrow">Sequence Diagram · SC-02</div>
+  <div class="sec-title">Conflict Detection — New Evidence Contradicts Accepted Evidence</div>
+  <div class="sec-desc">Shows the full path when newly ingested evidence creates a material contradiction with previously accepted evidence. A materialness score above 0.60 triggers workflow pause and a full AI re-evaluation. The analyst is alerted with a before/after summary and must acknowledge the conflict to resume.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'actorBkg':'#0C1428','actorBorder':'#1A4FD6','actorTextColor':'#FFFFFF','actorLineColor':'#6B7A9A','signalColor':'#3A4A6B','signalTextColor':'#0C1428','noteBkgColor':'#FEF3C7','noteTextColor':'#92400E','noteBorderColor':'#D97706'}}}%%
+sequenceDiagram
+    participant EB as Event Bus
+    participant CD as Conflict Detection
+    participant DB as Dispute DB
+    participant WF as Workflow State Mgr
+    participant AI as AI Inference Engine
+    participant AT as Audit Trail
+    participant NS as Notification Svc
+    actor ANA as Dispute Analyst
+
+    EB->>CD: evidence.ingested {case_id, evidence_id=E007}
+    CD->>DB: Load all prior EvidenceItems for case
+    DB-->>CD: EvidenceItems [E001..E006]
+
+    CD->>CD: Contradiction check — E007 contradicts E003 (delivery record vs claim)
+    CD->>CD: Materialness score = 0.81 — exceeds threshold 0.60
+    CD->>CD: Severity = HIGH — direct contradiction on key evidence
+    CD->>DB: WRITE ConflictRecord {E003 vs E007, materialness=0.81, severity=HIGH}
+    CD->>AT: LOG conflict.detected {evidence_ids, materialness, severity}
+    CD->>EB: PUBLISH conflict.detected {case_id, severity=HIGH, affected_hypothesis}
+
+    WF->>WF: Receive conflict.detected — severity=HIGH → PAUSE workflow
+    WF->>AT: LOG workflow.paused {reason=conflict_HIGH, prior_state=HUMAN_REVIEW}
+    NS->>ANA: ALERT conflict detected — workflow paused, re-evaluation starting
+
+    AI->>AI: Re-run full inference with E001..E007 in context
+    AI->>AI: New hypothesis generated — confidence revised to 0.64
+    AI->>EB: PUBLISH hypothesis.generated {case_id, version=2, conflict_aware=true}
+    AT->>AT: LOG hypothesis.generated {version=2, triggered_by=conflict}
+
+    WF->>WF: Resume workflow with updated hypothesis
+    NS->>ANA: Updated case ready — new AI hypothesis v2 conflicts resolved</pre>
+  </div>
+</section>
+
+<!-- ═══ SEQ-03 — AI HYPOTHESIS ═══ -->
+<section class="section" id="seq-03">
+  <div class="sec-eyebrow">Sequence Diagram · SC-03</div>
+  <div class="sec-title">AI Hypothesis Generation — On-Prem SLM · Low Confidence Path</div>
+  <div class="sec-desc">Detailed view of the on-prem inference pipeline. PII Scrubber runs before every model call. LiteLLM routes to the vLLM server (Phi-4 14B QLoRA-adapted) as primary; falls back to Ollama (Mistral-7B) if vLLM is unhealthy. Cloud LLM is a last-resort path with mandatory audit log entry and CISO-approved scrubbed payload only. When Bayesian confidence falls below 0.75 the case is routed to the analyst queue; below 0.50 it escalates directly to the manager queue.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'actorBkg':'#0C1428','actorBorder':'#1A4FD6','actorTextColor':'#FFFFFF','actorLineColor':'#6B7A9A','signalColor':'#3A4A6B','signalTextColor':'#0C1428','noteBkgColor':'#EDE0FB','noteTextColor':'#4C1D95','noteBorderColor':'#7B2FE0'}}}%%
+sequenceDiagram
+    participant EB as Event Bus
+    participant CB as Context Builder
+    participant PRB as Prompt Builder
+    participant PIIS as PII Scrubber
+    participant CAC as Inference Cache
+    participant VLLM as vLLM (Phi-4 14B)
+    participant OLLM as Ollama (Mistral-7B)
+    participant PRS as Hypothesis Parser
+    participant SCR as Evidence Scorer
+    participant CON as Confidence Calculator
+    participant AT as Audit Trail
+    participant WF as Workflow State Mgr
+    participant AG as Approval Gateway
+
+    EB->>CB: evidence.ingested {case_id}
+    CB->>CB: Assemble DisputeCase + EvidenceItems (8) + prior hypothesis
+    CB->>PRB: Context assembled — build prompt
+    PRB->>PRB: Inject QLoRA adapter few-shot examples + JSON schema
+    PRB->>PIIS: Raw context — scrub PII fields
+    PIIS->>PIIS: Presidio: mask PAN, tokenise customer_id, redact SSN
+    PIIS->>AT: LOG pii_scrub {fields_scrubbed, scrub_method, case_id}
+    PIIS->>CAC: Check cache key = SHA256(scrubbed_context+adapter_version)
+    CAC-->>PIIS: Cache MISS — proceed to on-prem SLM
+
+    PIIS->>VLLM: Scrubbed prompt → vLLM Phi-4 14B {response_format=json_object}
+    Note over VLLM: On-prem GPU cluster — no data egress
+    VLLM-->>PRS: Response {hypothesis, reasoning, evidence_links, confidence_raw}
+
+    PRS->>PRS: Validate JSON schema
+    Note over PRS: Schema mismatch — retry with structured output prompt
+    PRS->>VLLM: Retry with correction prompt
+    VLLM-->>PRS: Valid JSON response
+
+    PRS->>SCR: Parsed hypothesis + evidence_links
+    SCR->>SCR: Score each evidence item (recency·reliability·consistency·materiality)
+    SCR->>CON: Evidence scores + confidence_raw from SLM
+    CON->>CON: Bayesian aggregation → final_confidence = 0.61
+
+    Note over CON: confidence 0.61 — below 0.75 threshold — mandatory human review
+    CON->>AT: LOG hypothesis {model=phi4-qlora, confidence=0.61, adapter_version, prompt_version}
+    CON->>CAC: Cache result {key, hypothesis, confidence=0.61, TTL=4h}
+    CON->>EB: PUBLISH hypothesis.generated {case_id, confidence=0.61, route=HUMAN_REVIEW}
+
+    WF->>AG: Route to analyst queue {reason=confidence_below_threshold}
+    AT->>AT: LOG workflow.routed_to_human {confidence=0.61}</pre>
+  </div>
+</section>
+
+<!-- ═══ SEQ-04 — APPROVAL GATE ═══ -->
+<section class="section" id="seq-04">
+  <div class="sec-eyebrow">Sequence Diagram · SC-04</div>
+  <div class="sec-title">Human Approval Gate — Standard &amp; High-Value Escalation</div>
+  <div class="sec-desc">Shows both the standard analyst-level approval path and the manager escalation path for high-value actions. The RBAC Enforcer runs server-side on every request. The Idempotency Store prevents the dispatched action from being sent twice regardless of retries. All decisions are captured with rationale.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'actorBkg':'#0C1428','actorBorder':'#1A4FD6','actorTextColor':'#FFFFFF','actorLineColor':'#6B7A9A','signalColor':'#3A4A6B','signalTextColor':'#0C1428','noteBkgColor':'#FEF3C7','noteTextColor':'#92400E','noteBorderColor':'#D97706'}}}%%
+sequenceDiagram
+    participant NX as Next-Action Engine
+    participant AG as Approval Gateway
+    participant RBAC as RBAC Enforcer
+    participant AQ as Analyst Queue
+    participant MQ as Manager Queue
+    participant SLA as SLA Tracker
+    participant WF as Workflow State Mgr
+    participant IS as Idempotency Store
+    participant AT as Audit Trail
+    actor ANA as Dispute Analyst
+    actor MGR as Senior Manager
+
+    Note over NX,AG: Standard path — below authority threshold
+    NX->>AG: POST /approvals {action=REQUEST_MERCHANT_EVIDENCE, required_role=ANALYST}
+    AG->>RBAC: Validate action authority for ANALYST role
+    RBAC-->>AG: Authorised
+    AG->>AQ: Enqueue {priority=HIGH, deadline=T+2h}
+    AG->>AT: LOG approval.requested {action, required_role=ANALYST}
+    ANA->>AG: GET /approvals/{id} — review case + AI hypothesis
+    AG->>RBAC: Validate session — role=ANALYST confirmed
+    ANA->>AG: POST /approvals/{id}/approve {rationale=Delivery proof gap critical}
+    AG->>AT: LOG human.decision {actor=analyst_id, decision=APPROVED, rationale, timestamp}
+    AG->>WF: outcome.decided {approved}
+    WF->>IS: CHECK idempotency_key = hash(case+action+target)
+    IS-->>WF: Key NOT FOUND — safe to dispatch
+    WF->>IS: RESERVE key {status=IN_FLIGHT}
+    WF->>WF: Dispatch evidence request to Merchant Portal
+    WF->>IS: MARK key {status=COMPLETED}
+    WF->>AT: LOG action.dispatched
+
+    Note over NX,AG: High-value path — escalates to Manager queue
+    NX->>AG: POST /approvals {action=APPROVE_CHARGEBACK, value=5200, required_role=MANAGER}
+    AG->>RBAC: value=5200 exceeds 5000 threshold — requires MANAGER role
+    AG->>MQ: Enqueue {priority=HIGH, deadline=T+4h}
+    AG->>AT: LOG approval.requested {required_role=MANAGER}
+    SLA->>MGR: Approaching deadline — approval required in 30 min
+    MGR->>AG: POST /approvals/{id}/approve {rationale=Evidence supports chargeback}
+    AG->>AT: LOG human.decision {actor=manager_id, decision=APPROVED, rationale}</pre>
+  </div>
+</section>
+
+<!-- ═══ SEQ-05 — NATIONAL FINALE ═══ -->
+<section class="section" id="seq-05">
+  <div class="sec-eyebrow">Sequence Diagram · SC-05 — National Finale ★</div>
+  <div class="sec-title">Late Contradictory Evidence — Merchant Delivery Proof Injected</div>
+  <div class="callout callout-finale">
+    <strong>Finale Scenario:</strong> Case is at UNDER_REVIEW state with chargeback submission queued. The merchant submits a signed delivery receipt and GPS confirmation that directly contradicts the customer's "item not received" claim. The system must detect materialness, pause the workflow, re-evaluate all dependent conclusions, surface the change to the analyst, and record the full before/after state — all before any irreversible action is taken.
+  </div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'actorBkg':'#1A0A2E','actorBorder':'#7B2FE0','actorTextColor':'#E0D0FF','actorLineColor':'#7B2FE0','signalColor':'#4C1D95','signalTextColor':'#1A0A2E','noteBkgColor':'#1A0A2E','noteTextColor':'#C0A0E0','noteBorderColor':'#4A1A7A'}}}%%
+sequenceDiagram
+    actor MERCH as Merchant
+    participant MP as Merchant Portal
+    participant EI as Evidence Ingestion
+    participant EB as Event Bus
+    participant CD as Conflict Detection
+    participant DB as Dispute DB
+    participant WF as Workflow State Mgr
+    participant AI as AI Inference Engine
+    participant AT as Audit Trail
+    participant NS as Notification Svc
+    participant AG as Approval Gateway
+    actor ANA as Dispute Analyst
+
+    Note over MERCH,MP: Case state = UNDER_REVIEW — chargeback queued
+    MERCH->>MP: Upload signed delivery receipt + GPS confirmation
+    MP->>EI: POST /evidence {case_id, type=DELIVERY_PROOF, files=[receipt,gps]}
+    EI->>EI: Validate + normalise + tag {provenance=source-system-fact}
+    EI->>DB: WRITE EvidenceItem E010 {type=DELIVERY_PROOF}
+    EI->>EB: PUBLISH evidence.ingested {case_id, evidence_id=E010}
+    AT->>AT: LOG evidence.ingested {E010, provenance=source-system-fact}
+
+    EB->>CD: evidence.ingested {case_id, E010}
+    CD->>DB: Load prior EvidenceItems
+    CD->>CD: E010 contradicts E001 (item not received claim)
+    CD->>CD: Materialness = 0.94 — CRITICAL contradiction
+    CD->>DB: WRITE ConflictRecord {E001 vs E010, materialness=0.94, severity=CRITICAL}
+    CD->>AT: LOG conflict.detected {CRITICAL — delivery proof vs non-delivery claim}
+    CD->>EB: PUBLISH conflict.detected {severity=CRITICAL}
+
+    WF->>AT: LOG workflow.paused {reason=CRITICAL_conflict, prior_state=UNDER_REVIEW}
+    WF->>WF: PAUSE — hold all queued actions including chargeback submission
+    NS->>ANA: URGENT — critical conflict detected, workflow paused, re-evaluation required
+
+    AI->>DB: Load complete case — all 10 evidence items
+    AI->>AI: Full re-evaluation with new context
+    AI->>AI: New hypothesis — merchant not liable — confidence=0.89
+    AI->>AT: LOG hypothesis.v2 {confidence=0.89, evidence_links=[E001..E010], triggered_by=CRITICAL_conflict}
+    AI->>EB: PUBLISH hypothesis.generated {version=2, confidence=0.89}
+
+    Note over AG,ANA: Human review mandatory regardless of confidence — CRITICAL conflict
+    WF->>AG: Require human approval — CRITICAL conflict override
+    NS->>ANA: Case ready for review — AI hypothesis v2 available, requires sign-off
+    ANA->>AG: Review evidence E001 vs E010, review AI hypothesis v2
+    ANA->>AG: POST /approvals/{id}/decide {decision=DENY_CHARGEBACK, rationale=Delivery confirmed by GPS and signed receipt}
+    AG->>AT: LOG human.decision {actor=analyst_id, decision=DENY, rationale, hypothesis_version=2, evidence_set_hash}
+    AG->>WF: outcome.decided {deny_chargeback, resume_workflow}
+    WF->>WF: RESUME — update resolution to DENY
+    AT->>AT: LOG resolution.revised {before=UPHOLD_CHARGEBACK, after=DENY_CHARGEBACK}
+    NS->>MERCH: NOTIFY dispute resolved in your favour
+    NS->>ANA: Case closed — full audit trail preserved</pre>
+  </div>
+</section>
+
+<!-- ═══ SEQ-06 — FAILURE RECOVERY ═══ -->
+<section class="section" id="seq-06">
+  <div class="sec-eyebrow">Sequence Diagram · SC-06</div>
+  <div class="sec-title">Partial Failure Recovery — Timeout, Retry, and Checkpoint Restoration</div>
+  <div class="sec-desc">A service crash occurs mid-workflow after repeated timeouts. On restart, the Recovery Orchestrator loads the last valid checkpoint from SQLite and replays events from that point. The Idempotency Store ensures already-completed steps are skipped — the Merchant Portal receives exactly one request regardless of how many retries occurred before the crash.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'actorBkg':'#0C1428','actorBorder':'#1A4FD6','actorTextColor':'#FFFFFF','actorLineColor':'#6B7A9A','signalColor':'#3A4A6B','signalTextColor':'#0C1428','noteBkgColor':'#FEF3C7','noteTextColor':'#92400E','noteBorderColor':'#D97706'}}}%%
+sequenceDiagram
+    participant WF as Workflow State Mgr
+    participant CW as Checkpoint Writer
+    participant WDB as Workflow DB
+    participant IS as Idempotency Store
+    participant EI as Evidence Ingestion
+    participant MP as Merchant Portal
+    participant AT as Audit Trail
+    participant RO as Recovery Orchestrator
+
+    WF->>CW: Checkpoint {step=REQUEST_MERCHANT_EVIDENCE, status=IN_PROGRESS}
+    CW->>WDB: WRITE checkpoint
+    WF->>IS: CHECK key=abc123
+    IS-->>WF: NOT FOUND — proceed
+    WF->>IS: RESERVE key=abc123 {status=IN_FLIGHT}
+
+    WF->>EI: Dispatch evidence request {key=abc123}
+    EI->>MP: POST /evidence-requests {key=abc123}
+    MP--xEI: Timeout after 30s
+    WF->>AT: LOG action.failed {retry=1, error=TIMEOUT}
+
+    Note over WF: Exponential backoff — retry 1
+    WF->>EI: Retry {key=abc123}
+    EI->>MP: POST {key=abc123}
+    MP--xEI: Timeout again
+    WF->>AT: LOG action.failed {retry=2, error=TIMEOUT}
+
+    WF->>EI: Retry {key=abc123}
+    EI->>MP: POST {key=abc123}
+    MP-->>EI: 202 Accepted {request_id=REQ-001}
+    EI-->>WF: Success
+    WF->>IS: MARK key=abc123 {status=COMPLETED, result=REQ-001}
+    WF->>AT: LOG action.dispatched {attempts=3, result=REQ-001}
+
+    Note over WF,RO: Process crash — all in-memory state lost
+    WF->>WF: CRASH
+
+    RO->>WDB: On startup — LOAD last checkpoint
+    WDB-->>RO: Checkpoint {step=REQUEST_MERCHANT_EVIDENCE, status=IN_PROGRESS}
+    RO->>IS: CHECK key=abc123
+    IS-->>RO: FOUND — status=COMPLETED, result=REQ-001
+    RO->>RO: Step already completed — SKIP re-dispatch
+    RO->>AT: LOG recovery.completed {resumed_from_checkpoint, skipped=[REQUEST_MERCHANT_EVIDENCE]}
+    RO->>WF: Resume from next pending step — no duplicate dispatch</pre>
+  </div>
+</section>
+
+<!-- ═══ SEQ-07 — IDEMPOTENCY ═══ -->
+<section class="section" id="seq-07">
+  <div class="sec-eyebrow">Sequence Diagram · SC-07</div>
+  <div class="sec-title">Idempotency — Duplicate Action Prevention</div>
+  <div class="sec-desc">A network blip causes the Next-Action Engine to dispatch the same merchant evidence request twice. The Idempotency Store detects the duplicate on the second attempt using the stable idempotency key derived from case_id + action_type + target. The second dispatch is suppressed and the cached result is returned. The Merchant Portal receives exactly one request.</div>
+  <div class="diagram-wrap">
+    <pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'actorBkg':'#0C1428','actorBorder':'#1A4FD6','actorTextColor':'#FFFFFF','actorLineColor':'#6B7A9A','signalColor':'#3A4A6B','signalTextColor':'#0C1428','noteBkgColor':'#FEF3C7','noteTextColor':'#92400E','noteBorderColor':'#D97706'}}}%%
+sequenceDiagram
+    participant NX as Next-Action Engine
+    participant WF as Workflow State Mgr
+    participant IS as Idempotency Store
+    participant EI as Evidence Ingestion
+    participant MP as Merchant Portal
+    participant AT as Audit Trail
+
+    Note over NX: First dispatch
+    NX->>WF: Execute REQUEST_MERCHANT_DELIVERY_PROOF {case_id=C001}
+    WF->>WF: Compute key = hash(case_id + action_type + target) = abc123
+    WF->>IS: CHECK key=abc123
+    IS-->>WF: NOT FOUND — proceed
+    WF->>IS: RESERVE key=abc123 {status=IN_FLIGHT}
+    WF->>EI: Dispatch {type=DELIVERY_PROOF, key=abc123}
+    EI->>MP: POST /evidence-requests {key=abc123}
+    MP-->>EI: 201 Created {request_id=REQ-001}
+    EI-->>WF: Success
+    WF->>IS: MARK key=abc123 {status=COMPLETED, result=REQ-001}
+    WF->>AT: LOG action.dispatched {key=abc123, request_id=REQ-001}
+
+    Note over NX,WF: Network blip — NX sends duplicate
+    NX->>WF: Execute REQUEST_MERCHANT_DELIVERY_PROOF {case_id=C001}
+    WF->>WF: Compute key = hash(case_id + action_type + target) = abc123
+    WF->>IS: CHECK key=abc123
+    IS-->>WF: FOUND — status=COMPLETED, result=REQ-001
+    WF->>AT: LOG action.deduplicated {key=abc123, returned_cached=REQ-001}
+    WF-->>NX: REQ-001 (cached — no external call made)
+    Note over MP: Merchant Portal received exactly ONE request</pre>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  themeVariables: {
+    primaryColor: '#DBEAFE',
+    primaryTextColor: '#0C1428',
+    primaryBorderColor: '#1A4FD6',
+    lineColor: '#6B7A9A',
+    secondaryColor: '#F1F5F9',
+    tertiaryColor: '#EDE0FB',
+    noteBkgColor: '#FEF3C7',
+    noteTextColor: '#92400E',
+    noteBorderColor: '#D97706',
+    activationBkgColor: '#E6ECFA',
+    activationBorderColor: '#1A4FD6',
+  },
+  flowchart: { curve: 'basis', useMaxWidth: true },
+  sequence: { useMaxWidth: true, mirrorActors: false, diagramMarginX: 20, diagramMarginY: 10 },
+  securityLevel: 'loose',
+  maxTextSize: 300000,
+});
+
+const rendered = new Set();
+
+async function renderSection(id) {
+  if (rendered.has(id)) return;
+  rendered.add(id); // Mark early to prevent double-render
+  const section = document.getElementById(id);
+  if (!section) return;
+  const nodes = Array.from(section.querySelectorAll('pre.mermaid'));
+  if (!nodes.length) return;
+  try {
+    await mermaid.run({ nodes });
+  } catch (e) {
+    console.warn('Mermaid render issue for', id, ':', e);
+    // Show source as fallback
+    nodes.forEach(n => {
+      if (!n.querySelector('svg')) {
+        const pre = document.createElement('pre');
+        pre.style.cssText = 'font-size:11px;color:#64748B;background:#F8FAFC;padding:12px;border-radius:6px;overflow-x:auto;white-space:pre';
+        pre.textContent = n.textContent;
+        n.parentNode.insertBefore(pre, n);
+        n.style.display = 'none';
+      }
+    });
+  }
+}
+
+async function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sb-link').forEach(a => a.classList.remove('active'));
+  const section = document.getElementById(id);
+  if (section) section.classList.add('active');
+  const link = document.querySelector('[onclick="show(\'' + id + '\')"]');
+  if (link) link.classList.add('active');
+  window.scrollTo(0, 0);
+  // Render AFTER section is visible (display:block from .active class)
+  await renderSection(id);
+}
+
+document.addEventListener('DOMContentLoaded', () => show('c1'));
+</script>
+</body>
+</html>
