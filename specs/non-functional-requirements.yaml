@@ -1,0 +1,29 @@
+# ==============================================================================
+# File 3: non-functional-requirements.yaml
+# Description: Production-grade architecture expectations.
+# ==============================================================================
+
+NonFunctionalRequirements:
+  NFR01_EnterpriseResilience:
+    category: "Reliability"
+    description: "Build a production-ready, end-to-end working solution engineered for enterprise deployment and operational use."
+    
+  NFR02_PartialFailureRecovery:
+    category: "Fault Tolerance"
+    description: "Coordinate approved tools or specialist AI components with permission checks, retries, timeouts, idempotency and safe recovery when only part of a workflow succeeds."
+    
+  NFR03_ObservabilityAndAuditability:
+    category: "Observability"
+    description: "The solution should demonstrate production-grade architecture, security, resilience, observability, auditability, configurable controls, failure recovery and maintainable integration patterns."
+    
+  NFR04_SimulatedIntegration:
+    category: "Testing & Integration"
+    description: "Where live enterprise, partner or external-system access is unavailable, teams may use representative mock interfaces or simulated services, but the solution itself must behave as a deployable product."
+    
+  NFR05_DataHandling:
+    category: "Data Privacy"
+    description: "Use synthetic starter data where relevant. No live confidential enterprise data is required."
+    
+  NFR06_LateDataProcessing:
+    category: "Performance"
+    description: "Must react safely to late-arriving or changed information and recover from partial failure while retaining a complete inspectable audit trail."
