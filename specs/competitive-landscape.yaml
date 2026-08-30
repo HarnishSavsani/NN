@@ -1,0 +1,132 @@
+# ==============================================================================
+# File: competitive-landscape.yaml
+# Description: Competitive intelligence, gap analysis, and differentiation 
+#              strategy for the Evidence Reconstruction & Resolution Agent.
+# ==============================================================================
+
+competitor_profiles:
+  - name: "Pega Smart Dispute Agentic Automation"
+    category: "Enterprise BPM / Bank Back-Office"
+    target_customers: 
+      - "Issuing Banks"
+      - "Acquiring Banks"
+    business_model_pricing: "Enterprise Software Licensing / Subscription"
+    technology_approach: 
+      - "Rules-driven BPM (Business Process Management) built on Pega Constellation"
+      - "Process AI for routing and prediction scores"
+      - "Doc AI for OCR and document verification"
+      - "Knowledge Buddy using RAG for internal policy queries"
+      - "API integrations with Visa VROL and Mastercard MasterCom"
+    core_capabilities_strengths:
+      - "End-to-end lifecycle management for Visa, Mastercard, Zelle, and ACH"
+      - "In-built compliance rules (Reg E, Reg Z, Section 75)"
+      - "Supports straight-through processing (STP) for low-value claims"
+    weaknesses_and_gaps:
+      - "Architecturally rigid: Built on flowchart-based case management rather than event-sourced temporal logic."
+      - "Late Evidence Handling: Struggles with out-of-band, asynchronous evidence updates (like the 'National Finale Inject'). Requires manual workflow resets or complex exceptions."
+      - "Contradiction Engine: Uses AI to summarize, but lacks dynamic defeasible reasoning (automatically invalidating prior assumptions when new conflicting facts emerge)."
+
+  - name: "Chargeflow Automation"
+    category: "Merchant Dispute Representment SaaS"
+    target_customers: 
+      - "E-commerce Merchants"
+    business_model_pricing: "Success-based (e.g., fee on recovered revenue) / API-driven"
+    technology_approach: 
+      - "Agentic dispute representment API"
+      - "AI experiments to optimize evidence for each dispute"
+      - "Data ingestion, enrichment, and automated evidence creation"
+    core_capabilities_strengths:
+      - "Ingests disputes from connected PSPs, automatically assembles evidence packages, and submits network responses"
+      - "Generates claims from scratch rather than relying on static templates"
+    weaknesses_and_gaps:
+      - "One-Sided Advocacy: Designed purely to fight chargebacks on behalf of merchants, lacking the unbiased truth-seeking mandate required by banks."
+      - "No Human-in-the-Loop Liability: Highly automated, missing the role-based approval gates and explicit human liability ownership required by financial regulators."
+
+  - name: "Chargeblast"
+    category: "Pre-Dispute Deflection & Alerts SaaS"
+    target_customers: 
+      - "Merchants"
+    business_model_pricing: "Pay-per-alert (Plans start at $19/mo, $14 per deflection, 15% fee on recovery wins)"
+    technology_approach: 
+      - "Webhook interception via network alerts (Ethoca/Verifi)"
+      - "Automated workflows and custom rules"
+    core_capabilities_strengths:
+      - "Stops fraudulent disputes before they reach the issuer via pre-dispute alerts and auto-refunds"
+      - "Setup in under a week with a clean dashboard unifying alerts and disputes"
+    weaknesses_and_gaps:
+      - "Resolution Avoidance: It prevents chargebacks via auto-refunds rather than performing deep evidence reconciliation on complex factual disputes."
+      - "Lacks Complex Investigation: Not suited for resolving nuanced 'Item Not Received' disputes requiring unstructured data parsing across competing narratives."
+
+  - name: "NPCI UDIR (Unified Dispute and Issue Resolution)"
+    category: "Network-Level Clearing Switch Protocol"
+    target_customers: 
+      - "Banks"
+      - "PSPs (Google Pay, PhonePe, Paytm)"
+    business_model_pricing: "Network utility (regulated utility pricing)"
+    technology_approach: 
+      - "API-based real-time communication"
+      - "Continuous polling of participating banks"
+      - "Automated fund movement decisions"
+    core_capabilities_strengths:
+      - "Centralized network for arbitration between customers and merchants in the UPI ecosystem"
+      - "Automated, single-channel redressal system enforcing strict timeouts (e.g., auto-chargeback on T+1 for P2P if no response)"
+      - "Triggers instant auto-reversals without manual bank intervention"
+    weaknesses_and_gaps:
+      - "Structured Data Only: Highly effective for ledger matching (e.g., duplicate processing) but cannot handle subjective, unstructured evidence (photos, emails, chat transcripts)."
+      - "No AI Investigative Workspace: It is a routing and execution rail, not an operational interface for human specialists to untangle conflicting stories."
+
+feature_comparison_matrix:
+  - requirement: "Durable Domain Model (Temporal / Event-Sourced)"
+    pega: "Partial (State-based)"
+    chargeflow: "Partial"
+    chargeblast: "No"
+    udir: "Yes (Ledger logs)"
+    our_agent: "Yes (Full Temporal Event-Sourcing)"
+    
+  - requirement: "Handle Late/Conflicting Asynchronous Evidence (The Inject)"
+    pega: "No (Requires manual intervention/reset)"
+    chargeflow: "No"
+    chargeblast: "No"
+    udir: "No (Strict timeout limits)"
+    our_agent: "Yes (Defeasible reasoning graph)"
+    
+  - requirement: "Explicit Human Liability Gating"
+    pega: "Yes"
+    chargeflow: "No"
+    chargeblast: "No"
+    udir: "No (Fully automated)"
+    our_agent: "Yes (Action boundaries and approvals)"
+    
+  - requirement: "Time-Travel / Audit Replay"
+    pega: "Partial (Audit logs)"
+    chargeflow: "No"
+    chargeblast: "No"
+    udir: "No"
+    our_agent: "Yes (Immutable event reconstruction)"
+    
+  - requirement: "Unbiased Contradiction Detection"
+    pega: "Partial"
+    chargeflow: "No (Merchant biased)"
+    chargeblast: "No"
+    udir: "No"
+    our_agent: "Yes (Competing hypotheses evaluation)"
+
+white_space_opportunities:
+  - opportunity: "The 'Truth-Seeking' Middle Layer"
+    description: "Existing SaaS tools (Chargeflow, Chargeblast) operate as merchant defense lawyers. Legacy enterprise tools (Pega) operate as rigid bureaucratic filing cabinets. There is a massive void for an unbiased, dynamic intelligence layer that actively reconstructs the truth for the Issuer Bank, dynamically weighing evidence from both sides."
+  - opportunity: "Defeasible AI Logic in Financial Operations"
+    description: "Current systems assume a linear progression of truth. Building an engine capable of 'Defeasible Reasoning'—safely retracting a conclusion and rolling back state when contradictory evidence arrives late—solves the highest-cost exception-handling problem in banking."
+
+differentiation_pillars:
+  - pillar: "Event-Sourced Case Architecture"
+    description: "Every piece of evidence, AI inference, and human action is an immutable event. This natively enables safe partial failure recovery (via Idempotency/Sagas) and allows the supervisor to 'rewind' the UI to see exactly what the system knew at any point in time."
+  - pillar: "Dynamic Contradiction Engine"
+    description: "Rather than simply summarizing documents, the AI maps claims (Customer: 'I wasn't there') against network facts (Visa CE3.0: 'Device fingerprint matches previous purchases'). The UI explicitly highlights the contradiction and surfaces the gap to the human operator."
+  - pillar: "Actionable Uncertainty"
+    description: "Legacy systems hide uncertainty in 'Black Box' risk scores. Our agent makes uncertainty a first-class citizen, maintaining competing hypotheses (Hypothesis A: Friendly Fraud, Hypothesis B: Stolen Card) and ranking them as new evidence arrives."
+
+risks_of_copying_existing_approaches:
+  - risk: "The Pega Trap (BPM Rigidity)"
+    description: "If we build a flowchart-based workflow, the 'National Finale Inject' will break the system. We must avoid static if/then routing and instead use an agentic state machine that evaluates the 'next best action' dynamically based on current context."
+  - risk: "The Chargeblast Trap (Over-Automation)"
+    description: "If we fully automate liability decisions, we fail the core problem statement constraint: 'Final liability and consequential case decisions remain human-owned'. The agent must coordinate and recommend, but defer financial execution to human approval gates."

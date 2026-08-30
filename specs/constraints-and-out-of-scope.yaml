@@ -1,0 +1,29 @@
+# ==============================================================================
+# File 4: constraints-and-out-of-scope.yaml
+# Description: Explicit operational and regulatory boundaries.
+# ==============================================================================
+
+ConstraintsAndOutScope:
+  CON01_HumanOwnedLiability:
+    type: "Business Constraint"
+    description: "Final liability and consequential case decisions remain human-owned."
+    
+  CON02_NoSilentOverwrites:
+    type: "Architecture Constraint"
+    description: "Material changes must trigger targeted re-evaluation rather than silently preserving an outdated conclusion."
+    
+  CON03_ExplicitUncertainty:
+    type: "UX/AI Constraint"
+    description: "The system must represent competing interpretations and show which evidence supports, weakens or changes each option without hiding uncertainty."
+    
+  CON04_NoDuplicateActions:
+    type: "System Constraint"
+    description: "The workflow engine must explicitly prevent duplicate requests, duplicate transactions or repeated external actions during retries or partial failures."
+    
+  CON05_UPIProviderLogAvailability:
+    type: "Operational Constraint"
+    description: "The system must handle conditions where it is unknown whether the UPI provider (e.g., GPay, PhonePe) will share technical logs on time."
+    
+  CON06_RejectEnquiryBoundary:
+    type: "Process Constraint"
+    description: "If an Enquiry (Pre-Dispute) fails validation checks, it must be rejected immediately without proceeding to full Case Initiation or Evidence Collection."

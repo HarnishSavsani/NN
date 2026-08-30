@@ -1,0 +1,207 @@
+# ==============================================================================
+# File: synthetic-data.yaml
+# Description: E2E Event-Sourced Synthetic Data Package for Demo Environments.
+# Contains: 
+#  - Primary Scenario (The Inject): High-value electronics to Gachibowli.
+#  - Edge Case (Partial Failure): Duplicate food order in Kolhapur.
+#  - Friendly Fraud (CE 3.0): Bus transit Pune -> Kolhapur.
+# ==============================================================================
+
+synthetic_data_package:
+  version: "1.0.0"
+  export_timestamp: "2026-08-30T11:24:33Z"
+  tenant_id: "demo-tenant-01"
+
+  scenarios:
+    # --------------------------------------------------------------------------
+    # SCENARIO 1: THE NATIONAL FINALE INJECT (NON-DELIVERY -> CONTRADICTION)
+    # --------------------------------------------------------------------------
+    - scenario_id: "SCEN-001-THE-INJECT"
+      case_metadata:
+        case_id: "c84b1a32-7e90-4a8f-b9f1-d72b8d9c3a11"
+        status: "INVESTIGATION"
+        dispute_category: "FAILURE_TO_DELIVER"
+        network_routing: "VISA"
+        financial_value: 85000.00
+        currency: "INR"
+        merchant_name: "TechCart India"
+      
+      event_stream:
+        - event_id: "evt-001-01"
+          timestamp: "2026-08-15T09:12:00Z"
+          event_type: "RECORDED_FACT"
+          actor: "Customer_Portal"
+          payload:
+            source_party: "CUSTOMER"
+            evidence_type: "CustomerStatement"
+            narrative: "I ordered a laptop two weeks ago. The tracking hasn't updated, and I never received the package. I've been at my PG all week."
+          provenance:
+            source_system: "Mobile_Banking_App"
+            cryptographic_hash: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+
+        - event_id: "evt-001-02"
+          timestamp: "2026-08-15T09:12:05Z"
+          event_type: "AI_INFERENCE"
+          actor: "Defeasible_Engine_v2"
+          payload:
+            hypothesis_id: "hyp-001-A"
+            narrative_summary: "High probability of valid non-delivery claim. Missing merchant fulfillment data."
+            confidence_score: 0.88
+            supporting_evidence: ["evt-001-01"]
+            weakening_evidence: []
+
+        - event_id: "evt-001-03"
+          timestamp: "2026-08-16T10:00:00Z"
+          event_type: "AUTOMATED_ACTION"
+          actor: "Saga_Orchestrator"
+          payload:
+            action: "ISSUE_PROVISIONAL_CREDIT"
+            amount: 85000.00
+            status: "SUCCESS"
+            idempotency_key: "idem-pc-c84b1a32"
+
+        # *** THE LATE EVIDENCE INJECT ***
+        - event_id: "evt-001-04"
+          timestamp: "2026-08-28T14:30:22Z"
+          event_type: "RECORDED_FACT"
+          actor: "Merchant_API_Webhook"
+          payload:
+            source_party: "MERCHANT"
+            evidence_type: "DeliveryRecord"
+            is_late_arrival: true
+            data:
+              courier: "Delhivery"
+              tracking_id: "DLV994827110"
+              status: "DELIVERED"
+              delivery_address: "Stanza Living, Gachibowli, Hyderabad, Telangana"
+              authentication: "OTP_VERIFIED"
+              otp_timestamp: "2026-08-14T18:45:10Z"
+              geo_coordinates: "17.4401° N, 78.3489° E"
+          provenance:
+            source_system: "TechCart_Chargeback_API"
+            cryptographic_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+        - event_id: "evt-001-05"
+          timestamp: "2026-08-28T14:30:25Z"
+          event_type: "AI_INFERENCE"
+          actor: "Defeasible_Engine_v2"
+          payload:
+            hypothesis_id: "hyp-001-B"
+            narrative_summary: "CONTRADICTION DETECTED. Merchant provided cryptographic proof of OTP delivery at customer's established residence, contradicting the non-delivery claim."
+            confidence_score: 0.95
+            supersedes_hypothesis: "hyp-001-A"
+            supporting_evidence: ["evt-001-04"]
+            weakening_evidence: ["evt-001-01"]
+            recommended_action: "REVERSE_PROVISIONAL_CREDIT_AND_DECLINE"
+
+    # --------------------------------------------------------------------------
+    # SCENARIO 2: EXCESSIVE CHARGES (PARTIAL FAILURE & SAGA RECOVERY)
+    # --------------------------------------------------------------------------
+    - scenario_id: "SCEN-002-PARTIAL-FAILURE"
+      case_metadata:
+        case_id: "f92c3b44-8d11-4b2a-c0e2-e83c9e1d4b22"
+        status: "RESOLUTION"
+        dispute_category: "EXCESSIVE_CHARGES"
+        network_routing: "UPI"
+        financial_value: 450.00
+        currency: "INR"
+        merchant_name: "Krushnai PAVBHAJI - Kolhapur"
+
+      event_stream:
+        - event_id: "evt-002-01"
+          timestamp: "2026-08-29T20:15:00Z"
+          event_type: "RECORDED_FACT"
+          actor: "Customer_Portal"
+          payload:
+            source_party: "CUSTOMER"
+            evidence_type: "CustomerStatement"
+            narrative: "Zomato app glitched and charged my UPI twice for the same Pav Bhaji order."
+        
+        - event_id: "evt-002-02"
+          timestamp: "2026-08-29T20:15:10Z"
+          event_type: "RECORDED_FACT"
+          actor: "Bank_Core_Ledger"
+          payload:
+            source_party: "BANK"
+            evidence_type: "TransactionEvent"
+            data:
+              tx_1: { id: "UPI/6241992011/ZOMATO", amount: 450.00, time: "2026-08-29T19:10:05Z" }
+              tx_2: { id: "UPI/6241992012/ZOMATO", amount: 450.00, time: "2026-08-29T19:10:07Z" }
+        
+        - event_id: "evt-002-03"
+          timestamp: "2026-08-29T20:15:15Z"
+          event_type: "AI_INFERENCE"
+          actor: "Defeasible_Engine_v2"
+          payload:
+            hypothesis_id: "hyp-002-A"
+            narrative_summary: "Duplicate processing confirmed via value-stream matching (same amount, merchant, < 5 sec variance)."
+            confidence_score: 0.99
+            recommended_action: "STP_AUTO_REFUND"
+
+        # *** THE PARTIAL FAILURE EDGE CASE ***
+        - event_id: "evt-002-04"
+          timestamp: "2026-08-29T20:15:20Z"
+          event_type: "AUTOMATED_ACTION"
+          actor: "Saga_Orchestrator"
+          payload:
+            action: "EXECUTE_REFUND_API"
+            status: "HTTP_503_SERVICE_UNAVAILABLE"
+            error_detail: "NPCI UDIR Gateway Timeout"
+            idempotency_key: "idem-ref-f92c3b44"
+            
+        - event_id: "evt-002-05"
+          timestamp: "2026-08-29T20:20:20Z"
+          event_type: "AUTOMATED_ACTION"
+          actor: "Saga_Orchestrator"
+          payload:
+            action: "EXECUTE_REFUND_API_RETRY_1"
+            status: "SUCCESS"
+            note: "Recovered via exponential backoff. Idempotency lock prevented duplicate ledger entry."
+
+    # --------------------------------------------------------------------------
+    # SCENARIO 3: I DIDN'T BUY THIS (FRIENDLY FRAUD / VISA CE 3.0)
+    # --------------------------------------------------------------------------
+    - scenario_id: "SCEN-003-FRIENDLY-FRAUD"
+      case_metadata:
+        case_id: "a13d5f66-9e22-4c3b-d1f3-f94d0f2e5c33"
+        status: "INVESTIGATION"
+        dispute_category: "UNAUTHORIZED_CHARGES"
+        network_routing: "VISA"
+        financial_value: 1200.00
+        currency: "INR"
+        merchant_name: "RedBus/AbhiBus - Pune Transit"
+
+      event_stream:
+        - event_id: "evt-003-01"
+          timestamp: "2026-08-25T08:00:00Z"
+          event_type: "RECORDED_FACT"
+          actor: "Customer_Portal"
+          payload:
+            source_party: "CUSTOMER"
+            evidence_type: "CustomerStatement"
+            narrative: "Someone hacked my card and booked a bus ticket. I did not authorize this."
+
+        - event_id: "evt-003-02"
+          timestamp: "2026-08-26T11:00:00Z"
+          event_type: "RECORDED_FACT"
+          actor: "Merchant_API_Webhook"
+          payload:
+            source_party: "MERCHANT"
+            evidence_type: "AuthenticationEvent"
+            data:
+              route: "Pune, Maharashtra -> Kolhapur, Maharashtra"
+              device_fingerprint: "device-hash-998x-ios-app"
+              ip_address: "103.115.x.x (Pune ASN)"
+              prior_undisputed_transactions:
+                - { date: "2026-05-12", amount: 1150.00, device: "device-hash-998x-ios-app" }
+                - { date: "2026-07-04", amount: 1200.00, device: "device-hash-998x-ios-app" }
+
+        - event_id: "evt-003-03"
+          timestamp: "2026-08-26T11:00:05Z"
+          event_type: "AI_INFERENCE"
+          actor: "Defeasible_Engine_v2"
+          payload:
+            hypothesis_id: "hyp-003-A"
+            narrative_summary: "Friendly Fraud Detected. Merchant evidence satisfies Visa CE 3.0 rules (2 prior undisputed transactions from identical device fingerprint/IP within 120 days)."
+            confidence_score: 0.98
+            recommended_action: "DECLINE_DISPUTE_CUSTOMER_LIABLE"

@@ -1,0 +1,335 @@
+# ==============================================================================
+# File: security-and-compliance.yaml
+# Description: Production-grade Security, Governance, and Regulatory Compliance
+#              Specification for Card & UPI Dispute Evidence Intelligence System.
+# ==============================================================================
+
+security_and_compliance_specification:
+  system_name: "Evidence Reconstruction & Resolution Agent"
+  classification_level: "Enterprise Critical / PCI-DSS In-Scope / Regulated Financial Infrastructure"
+  version: "1.0.0"
+  last_updated: "2026-08-30"
+
+  # ----------------------------------------------------------------------------
+  # 1. DATA CLASSIFICATION & HANDLING MATRIX
+  # ----------------------------------------------------------------------------
+  data_classification_matrix:
+    - data_tier: "Tier 1: Cardholder Data (CHD) & Sensitive Authentication Data (SAD)"
+      examples:
+        - "Primary Account Number (PAN)"
+        - "Card Expiration Date"
+        - "Cardholder Name"
+        - "CVV / CVC (SAD - Never Stored Post-Auth)"
+        - "PIN Blocks / 3D Secure Cryptograms"
+      storage_policy: "Zero SAD retention. PAN must be truncated (first 6 / last 4) or replaced with Scheme Network Token (VTS/MDES)."
+      encryption_at_rest: "AES-256-GCM with Envelope Encryption via FIPS 140-3 Level 3 HSM."
+      encryption_in_transit: "TLS 1.3 with PFS (Perfect Forward Secrecy) using ChaCha20-Poly1305 or AES-256-GCM."
+      field_level_encryption: "Required: FF3-1 Format-Preserving Encryption (FPE) for PAN or irreversible tokenization."
+
+    - data_tier: "Tier 2: Personally Identifiable Information (PII) & UPI Identifiers"
+      examples:
+        - "Customer Full Legal Name, Residential Address, Phone Number, Email"
+        - "Virtual Payment Address (VPA / UPI ID, e.g., user@okhdfcbank)"
+        - "Bank Account Number / IFSC Code"
+        - "UPI Retrieval Reference Number (RRN)"
+        - "Customer Geo-location & IP Address"
+      storage_policy: "Data minimization applied. Masked by default in operator views; unmasking requires explicit Just-In-Time (JIT) audit logging."
+      encryption_at_rest: "AES-256 at database/tablespace level + Field-Level AES-GCM for VPA and Address."
+      encryption_in_transit: "TLS 1.3."
+      field_level_encryption: "Required for Customer Phone, Email, Residential Coordinates."
+
+    - data_tier: "Tier 3: Unstructured Evidence & Artifacts"
+      examples:
+        - "Merchant Receipts (PDF/PNG)"
+        - "Carrier Proof of Delivery (FedEx/DHL/Delhivery signed manifests, geotagged porch photos)"
+        - "Customer-Merchant Chat/Email Correspondence Transcripts"
+        - "Biometric / Cryptographic Signature Logs"
+      storage_policy: "Stored in WORM (Write Once, Read Many) Object Storage. Metadata indexed separately."
+      encryption_at_rest: "Client-side envelope encryption before S3/Blob upload with unique per-object Data Encryption Key (DEK)."
+      encryption_in_transit: "TLS 1.3 via signed, short-lived (max 15 min) HTTPS pre-signed URLs."
+      field_level_encryption: "SHA-256 cryptographic hashing on ingestion to preserve forensic chain of custody."
+
+    - data_tier: "Tier 4: System Telemetry, AI Inferences & Workflow State"
+      examples:
+        - "Contradiction Matrix Outputs"
+        - "Defeasible Reasoning Graph Nodes"
+        - "Confidence Scores & Hypothesis Weights"
+        - "Action Recommendation History"
+      storage_policy: "Immutable append-only event stream (Kafka / EventStoreDB / Ledger)."
+      encryption_at_rest: "AES-256-GCM."
+      encryption_in_transit: "mTLS 1.3."
+      field_level_encryption: "Not required unless payload contains embedded Tier 1/2 references (which must use Token IDs)."
+
+  # ----------------------------------------------------------------------------
+  # 2. CRYPTOGRAPHIC CONTROLS & SECRETS MANAGEMENT
+  # ----------------------------------------------------------------------------
+  cryptography_and_secrets:
+    key_management_service:
+      engine: "Hardware Security Module (HSM) Cloud KMS (FIPS 140-3 compliant)"
+      architecture: "Envelope Encryption (Master Key / KEK manages ephemeral Data Encryption Keys / DEKs)"
+      key_rotation_policy:
+        kek_rotation_frequency: "Every 365 days (automated, seamless)"
+        dek_rotation_frequency: "Every 90 days or every 1,000,000 encryption operations"
+        emergency_rotation_sla: "< 15 minutes in case of key compromise flag"
+
+    secrets_vault:
+      provider: "HashiCorp Vault / AWS Secrets Manager"
+      dynamic_secrets: "Short-lived dynamic database credentials (TTL: 1 hour) for agent worker pods"
+      api_tokens: "mTLS client certificates and rotating API tokens with strict IP whitelisting"
+      zero_hardcoding: "Static analysis pipeline (TruffleHog / GitGuardian) in CI/CD blocks commits with entropy matches."
+
+  # ----------------------------------------------------------------------------
+  # 3. ACCESS CONTROL ARCHITECTURE (RBAC + ABAC)
+  # ----------------------------------------------------------------------------
+  access_control_framework:
+    authentication_mechanisms:
+      - "Enterprise OIDC / SAML 2.0 Identity Provider (IdP)"
+      - "Mandatory Multi-Factor Authentication (FIDO2 / WebAuthn Hardware Security Keys)"
+      - "Session TTL: 30 minutes idle timeout; 8 hours absolute timeout"
+
+    roles_and_privileges (RBAC):
+      Investigator_Tier1:
+        description: "Front-line analyst reviewing preliminary customer and merchant filings."
+        permissions:
+          - "read:dispute_case_summary"
+          - "read:evidence_redacted"
+          - "create:evidence_request"
+          - "create:preliminary_notes"
+        prohibited:
+          - "approve:financial_action"
+          - "read:unmasked_pan_pii"
+          - "override:ai_hypothesis"
+
+      Dispute_Specialist_Tier2:
+        description: "Senior operator owning case investigation, contradiction analysis, and next-best actions."
+        permissions:
+          - "read:dispute_case_full"
+          - "read:contradiction_matrix"
+          - "write:hypothesis_decision"
+          - "execute:action_under_threshold"
+          - "override:ai_inference"
+        prohibited:
+          - "approve:high_value_liability"
+          - "admin:security_configurations"
+
+      Risk_Supervisor_Approver_Tier3:
+        description: "Manager with sign-off authority on high-value chargebacks, exceptions, and reversals."
+        permissions:
+          - "read:dispute_case_full"
+          - "approve:high_value_liability"
+          - "approve:clawback_and_pre_arb"
+          - "execute:manual_workflow_override"
+          - "read:audit_time_travel"
+
+      Compliance_Auditor:
+        description: "Internal and external regulatory auditors verifying process and chain of custody."
+        permissions:
+          - "read:immutable_audit_log"
+          - "read:chain_of_custody_proof"
+          - "execute:audit_replay_time_travel"
+        prohibited:
+          - "write:*"
+          - "execute:*"
+
+      System_Administrator:
+        description: "Technical maintainer of agent runtime, integration mocks, and rule parameters."
+        permissions:
+          - "manage:infrastructure"
+          - "manage:circuit_breakers"
+          - "manage:system_telemetry"
+        prohibited:
+          - "read:financial_payloads_unmasked"
+          - "modify:immutable_events"
+
+    attribute_based_access_control (ABAC):
+      rules:
+        - rule_id: "ABAC-01-HIGH-VALUE-GATE"
+          condition: "case.financialValue > 1000.00 USD (or equivalent INR 85,000)"
+          required_attribute: "user.role == 'Risk_Supervisor_Approver_Tier3' AND user.department == 'RiskOperations'"
+          enforcement: "Blocks single-operator resolution; requires Two-Person Rule (Maker-Checker)."
+
+        - rule_id: "ABAC-02-JIT-PII-UNMASK"
+          condition: "action == 'unmask_pii'"
+          required_attribute: "user.active_ticket_assigned == case.id AND user.mfa_step_up == true"
+          enforcement: "Issues 5-minute unmask token; writes high-severity log to SIEM."
+
+        - rule_id: "ABAC-03-BOUNDARY-LOCKOUT"
+          condition: "case.status in ['CLOSED_CUSTOMER_LIABLE', 'CLOSED_MERCHANT_LIABLE']"
+          required_attribute: "user.role == 'Risk_Supervisor_Approver_Tier3' AND request.reason_code == 'POST_SETTLEMENT_ARBITRATION'"
+          enforcement: "Prevents case progression once terminal state reached without formal re-open authorization."
+
+  # ----------------------------------------------------------------------------
+  # 4. AUDIT TRAIL, PROVENANCE & "TIME-TRAVEL" REPLAYABILITY
+  # ----------------------------------------------------------------------------
+  audit_and_provenance_system:
+    ledger_architecture:
+      storage_type: "Immutable Append-Only Event Stream with Merkle Tree verification"
+      guarantees: "Write Once, Read Many (WORM); zero UPDATE or DELETE permissions on event tables."
+      integrity_validation: "Every event node contains: parent_event_hash, payload_hash, and timestamp_signed_by_kms."
+
+    event_payload_schema:
+      required_fields:
+        - "event_id: UUIDv7 (time-ordered)"
+        - "case_id: UUID"
+        - "timestamp_utc: ISO-8601 (microsecond precision from atomic clock source)"
+        - "actor_identity: { actor_id: String, role: String, ip_address: String, session_token_hash: String }"
+        - "event_category: Enum [RECORDED_FACT, AI_INFERENCE, USER_INPUT, AUTOMATED_ACTION, HUMAN_DECISION]"
+        - "source_system: String (e.g., 'Visa_VROL_Adapter', 'FedEx_Webhook', 'Agent_Defeasible_Engine')"
+        - "payload_hash: SHA-256 digest of normalized payload content"
+        - "preceding_event_hash: SHA-256 digest of previous event in case sequence"
+        - "system_knowledge_state_hash: Root Merkle hash representing total system state at event time"
+
+    time_travel_audit_replay:
+      capability_description: "Deterministic ability to reconstruct and render the exact UI, hypotheses, and knowledge state visible at any arbitrary historical timestamp T."
+      replay_mechanism:
+        - "Engine accepts case_id and target_timestamp_T."
+        - "Aggregator queries event stream: SELECT * WHERE case_id = X AND timestamp <= T ORDER BY timestamp ASC."
+        - "State machine projects events up to T without applying subsequent events."
+        - "Specialist UI renders in 'Historical Read-Only Inspection Mode' showing exact confidence scores and assumptions known at that precise moment."
+
+  # ----------------------------------------------------------------------------
+  # 5. CHAIN OF CUSTODY & LATE-ARRIVING CONTRADICTORY EVIDENCE
+  # ----------------------------------------------------------------------------
+  evidence_chain_of_custody:
+    ingestion_validation:
+      - step: "Payload Received"
+        action: "Calculate SHA-256 digest immediately upon boundary entry."
+      - step: "Provenance Tagging"
+        action: "Record ingestion protocol (e.g., AS2, SFTP, Signed Webhook), remote IP, TLS cert thumbprint."
+      - step: "WORM Storage"
+        action: "Write raw artifact to immutable bucket with object lock enabled."
+
+    handling_late_inject_without_breaking_custody:
+      principle: "Prior evidence and inferences are NEVER overwritten or discarded. Truth is additive and defeasible."
+      protocol:
+        1. "Late evidence is ingested as a new immutable event: EVIDENCE_INGESTED_LATE."
+        2. "The system registers an explicit CONTRADICTION_DETECTED event linking the new evidence ID to the prior evidence ID."
+        3. "Prior AI inferences are marked as INFERENCE_SUPERSEDED (pointing to the new event ID) rather than mutated."
+        4. "A new HYPOTHESIS_GENERATED event is appended with updated probabilistic weights."
+        5. "All historical calculations remain fully inspectable in the audit trail."
+
+  # ----------------------------------------------------------------------------
+  # 6. THREAT MODELING (STRIDE) & MITIGATION CONTROLS
+  # ----------------------------------------------------------------------------
+  threat_model:
+    - threat_id: "TM-01-SPOOFING"
+      target: "External Integration Webhooks (Merchant Evidence Upload / UPI Settlement Logs)"
+      attack_vector: "Attacker transmits fraudulent delivery receipts posing as a verified merchant portal."
+      mitigation: "Enforce HMAC-SHA256 signature verification with merchant-shared secrets + mTLS on all ingestion webhooks. Reject unsigned payloads."
+
+    - threat_id: "TM-02-TAMPERING"
+      target: "Evidence Artifact Storage & Case Event History"
+      attack_vector: "Rogue database administrator alters delivery timestamps to force a favorable chargeback ruling."
+      mitigation: "Append-only cryptographic hash chaining (Merkle tree). Any alteration of past rows invalidates all subsequent hashes, triggering an automated integrity alert."
+
+    - threat_id: "TM-03-REPUDIATION"
+      target: "Specialist Liability Decisions & Financial Authorizations"
+      attack_vector: "Operator approves a $5,000 reversal and later claims the AI agent acted autonomously."
+      mitigation: "Strict separation of event types. HUMAN_DECISION events require signed JWT bearing the operator's private session key and MFA attestation."
+
+    - threat_id: "TM-04-INFORMATION-DISCLOSURE"
+      target: "Unstructured Case Notes & Cross-System Evidence Payloads"
+      attack_vector: "Full card numbers or customer Aadhaar/SSN leaked in unstructured customer-merchant chat transcripts."
+      mitigation: "Automated real-time DLP (Data Loss Prevention) / PII Redaction Agent scrubs PANs and sensitive identifiers before persistence in the operational workspace."
+
+    - threat_id: "TM-05-DENIAL-OF-SERVICE"
+      target: "Evidence Reconstruction Agentic Core / LLM Reasoning Engine"
+      attack_vector: "Malicious merchant floods dispute API with 1,000-page corrupted PDFs, exhausting LLM context windows and worker memory."
+      mitigation: "Hard boundary limits: File size capped at 15MB, page limit max 25, worker concurrency limits, strict token budgets, and sandboxed OCR processing."
+
+    - threat_id: "TM-06-ELEVATION-OF-PRIVILEGE"
+      target: "Automated Action Dispatcher"
+      attack_vector: "Adversary manipulates confidence score payload to trick the agent into auto-executing high-value settlement without human approval."
+      mitigation: "Hardcoded circuit breakers in backend code: Regardless of AI confidence score, if financialValue > threshold, workflow execution is structurally blocked until Tier 3 signature is committed."
+
+  # ----------------------------------------------------------------------------
+  # 7. REGULATORY COMPLIANCE MAPPING
+  # ----------------------------------------------------------------------------
+  regulatory_frameworks:
+    pci_dss_v4_0:
+      - requirement: "Req 3.4 / 3.5 - Protect Cardholder Data"
+        implementation: "PAN masked in all UI views; tokenized at ingestion; zero SAD storage."
+      - requirement: "Req 7.2 / 7.3 - Least Privilege Access Control"
+        implementation: "RBAC + ABAC policies enforced via centralized policy engine (e.g., Open Policy Agent)."
+      - requirement: "Req 10.2 - Audit Logging of All Actions"
+        implementation: "Immutable event store logging every read, write, AI inference, and financial execution."
+
+    rbi_digital_payment_security_controls_india:
+      - requirement: "Section 4 - Customer Protection & Liability Governance"
+        implementation: "Provisional credit calculation timers strictly tracked against regulatory deadlines; human ownership of final liability."
+      - requirement: "Section 6 - UPI Architecture & VPA Protection"
+        implementation: "VPA and mobile binding hashes encrypted; NPCI UDIR protocol compatibility for automated resolution."
+      - requirement: "Section 14 - Data Localization"
+        implementation: "All dispute case data, synthetic instances, logs, and cryptographic keys reside strictly in domestic sovereign cloud regions."
+
+    india_dpdp_act_2023_and_gdpr:
+      - requirement: "Purpose Limitation & Data Minimization"
+        implementation: "Evidence gathered is restricted strictly to transaction verification. Automated data purging/anonymization workflows triggered post regulatory retention SLA (e.g., 7 years)."
+
+  # ----------------------------------------------------------------------------
+  # 8. SECURE INTEGRATION PATTERNS WITH SIMULATED / MOCK SYSTEMS
+  # ----------------------------------------------------------------------------
+  mock_integration_security:
+    isolation_principle: "Simulated interfaces and synthetic mock data engines must strictly replicate enterprise security boundaries without exposing real customer data or insecure bypass channels."
+    patterns:
+      - system: "Mock Visa VROL / Mastercard MasterCom Gateway"
+        protocol: "mTLS with self-signed test CA certificates; HMAC-SHA256 request signing"
+        data_handling: "Uses synthetic test PANs (e.g., Visa BIN 4000 00XX XXXX 0002) that fail Luhn checks on real networks."
+      
+      - system: "Mock Merchant Ingestion API (The Finale Inject Endpoint)"
+        protocol: "Webhook endpoint secured via API Key + Webhook Signature Header (X-Signature-SHA256)."
+        safety_control: "Rate-limited to prevent buffer overflow in hackathon demo harness."
+      
+      - system: "Mock Core Banking Ledger (Provisional Credit / Reversal API)"
+        protocol: "Idempotent REST API requiring unique Idempotency-Key (UUIDv4) in HTTP header."
+        fault_injection_mode: "Configurable chaos toggle (e.g., 500 Internal Error on Step 2) to demonstrate safe Saga rollback and zero double-credit."
+
+  # ----------------------------------------------------------------------------
+  # 9. ACTION BOUNDARIES, CIRCUIT BREAKERS & APPROVAL GATES
+  # ----------------------------------------------------------------------------
+  action_boundaries_and_governance:
+    autonomous_agent_limits:
+      permitted_without_human_approval:
+        - "Ingest and normalize evidence records"
+        - "Query internal read-only telemetry (auth logs, past transactions)"
+        - "Generate contradiction matrices and hypothesis probabilities"
+        - "Draft evidence request templates to cardholders/merchants"
+        - "Trigger provisional credit for Bucket 1 Minor Claims (< $50) IF fraud probability < 0.05"
+      strictly_prohibited_without_human_approval:
+        - "Permanent liability assignment (Customer vs Merchant)"
+        - "Chargeback filing > $50"
+        - "Pre-Arbitration or Arbitration escalation"
+        - "Provisional credit clawback or reversal"
+        - "Account suspension or fraud listing"
+
+    circuit_breakers_and_resilience:
+      - breaker_id: "CB-01-VOLUME-SPIKE"
+        trigger: "Dispute injection volume increases by > 300% in a 5-minute rolling window"
+        action: "Halt automated Bucket 1 STP processing; force all incoming cases to Tier 1 triage queue; notify SecOps."
+      
+      - breaker_id: "CB-02-CONTRADICTION-ANOMALY"
+        trigger: "AI confidence score on opposing hypotheses is within 5% parity (high ambiguity)"
+        action: "Lock automated recommendations; flag case with high-visibility UNCERTAINTY_FLAG for Senior Specialist review."
+
+      - breaker_id: "CB-03-PARTIAL-FAILURE-ISOLATION"
+        trigger: "Downstream scheme API times out during financial reversal dispatch"
+        action: "Saga Orchestrator pauses workflow, writes COMPENSATION_PENDING event, sets backoff retry timer, and prevents duplicate button clicks via idempotency lock."
+
+  # ----------------------------------------------------------------------------
+  # 10. SECURITY MONITORING, SIEM & INCIDENT RESPONSE
+  # ----------------------------------------------------------------------------
+  monitoring_and_telemetry:
+    siem_integration: "All security events exported via Syslog / CEF format to central SIEM (Splunk / Elastic)."
+    alerting_triggers:
+      - alert_name: "UNAUTHORIZED_STATE_PROGRESSION_ATTEMPT"
+        severity: "CRITICAL"
+        condition: "API call attempts to transition case to 'CLOSED' without valid human approval JWT."
+      - alert_name: "INTEGRITY_HASH_MISMATCH"
+        severity: "CRITICAL"
+        condition: "Merkle verification fails on event stream playback."
+      - alert_name: "EXCESSIVE_PII_UNMASKING"
+        severity: "HIGH"
+        condition: "Operator unmasks > 20 cardholder records within a 1-hour window."
+      - alert_name: "DUPLICATE_IDEMPOTENCY_COLLISION"
+        severity: "MEDIUM"
+        condition: "Multiple distinct payloads received bearing the same Idempotency-Key."

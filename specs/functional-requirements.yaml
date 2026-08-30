@@ -1,0 +1,41 @@
+# ==============================================================================
+# File 2: functional-requirements.yaml
+# Description: Core solution capabilities and end-to-end expectations.
+# ==============================================================================
+
+FunctionalRequirements:
+  FR01_AssembleAndReconcile:
+    priority: "MUST"
+    description: "Assemble and reconcile customer statements, merchant records, transaction events, receipts, delivery records, authentication events and correspondence into a coherent, time-aware operating view."
+    
+  FR02_InvestigationMatrix:
+    priority: "MUST"
+    description: "Implement an Investigation Matrix / Investigation Engine to process inputs collected from the Customer, Acquirer, Merchant, and Bank."
+
+  FR03_DetectGapsAndContradictions:
+    priority: "MUST"
+    description: "Detect missing, stale, duplicated or contradictory information and make uncertainty explicit."
+
+  FR04_DynamicNextBestAction:
+    priority: "MUST"
+    description: "Determine the next-best evidence request or permitted action dynamically from current state, deadlines, dependencies, authority and expected value rather than relying on a fixed happy path."
+
+  FR05_ResolutionEngineBucketing:
+    priority: "MUST"
+    description: "Route cases through a Resolution Engine with distinct buckets: Bucket 1 for Minor Cases (<$50) favoring STP (Straight Through Processing) based on Customer Credibility/Fraud; Bucket 2 for Probabilistic evaluation; Bucket 3 for Major Cases (>$1000) using Deterministic evaluation."
+
+  FR06_NationalFinaleInject:
+    priority: "MUST"
+    description: "Must handle a scenario where a merchant provides material evidence late, contradicting the customer’s original description. The solution must incorporate it, reassess dependent conclusions and make the change visible."
+
+  FR07_WorkflowStateAndIdempotency:
+    priority: "MUST"
+    description: "Track long-running workflow state, deadlines and cross-system dependencies while preventing duplicate requests, duplicate transactions or repeated external actions."
+
+  FR08_ValueStreamMatching:
+    priority: "SHOULD"
+    description: "Support value stream matching to reconcile excessive charges or unauthorized transaction disputes against external logs."
+    
+  FR09_AuditReplay:
+    priority: "MUST"
+    description: "Support role-based intervention, approval gates, audit replay and configurable action boundaries so reviewers can reconstruct what the system knew, why it acted and what changed afterward."

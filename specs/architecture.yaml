@@ -1,0 +1,140 @@
+# ==============================================================================
+# File: architecture.yaml
+# Description: Production-ready architectural blueprint for the Card Dispute 
+#              Evidence Reconstruction & Resolution Agent.
+# ==============================================================================
+
+architecture_specification:
+  system_name: "ResolutionOS Core Backend"
+  design_paradigm: "Event-Driven, CQRS, and Event Sourcing with Temporal Orchestration"
+  version: "1.0.0"
+
+  # ----------------------------------------------------------------------------
+  # 1. HIGH-LEVEL COMPONENT DIAGRAM
+  # ----------------------------------------------------------------------------
+  high_level_components:
+    API_Gateway:
+      description: "Entry point for UI and Webhooks. Handles TLS termination, rate limiting, and JWT validation."
+    Dispute_Command_Service:
+      description: "Accepts mutations (commands). Enforces idempotency and validates state before appending events to the Event Store."
+    Defeasible_AI_Engine:
+      description: "Evaluates the current case state. Re-runs contradiction detection when new evidence arrives. Coordinates LLM calls."
+    Saga_Orchestrator:
+      description: "Manages long-running workflows, timers, and cross-system dependencies[cite: 1]."
+    Read_Model_Projectors:
+      description: "Listens to the Event Store and builds optimized views (e.g., Contradiction Matrix, Timeline) for the UI."
+    Audit_and_Time_Travel_Service:
+      description: "Allows reviewers to reconstruct what the system knew, why it acted and what changed afterward by replaying events up to time T[cite: 1]."
+    External_System_Adapters:
+      description: "Anti-corruption layers communicating with Visa, Mastercard, Core Banking, and Merchant APIs."
+
+  # ----------------------------------------------------------------------------
+  # 2. DOMAIN MODEL PERSISTENCE STRATEGY
+  # ----------------------------------------------------------------------------
+  persistence_strategy:
+    pattern: "Event Sourcing with CQRS (Command Query Responsibility Segregation)"
+    event_store:
+      description: "Append-only, immutable ledger representing the absolute truth of the system."
+      characteristics:
+        - "No updates or deletes allowed. Corrections are modeled as compensation events."
+        - "Maintains versioned state with source-level provenance[cite: 1]."
+    document_storage:
+      description: "WORM (Write Once, Read Many) object storage for unstructured evidence (PDFs, Images)."
+      linkage: "Event payloads store the immutable URI and SHA-256 hash of the document."
+    read_models:
+      description: "Highly denormalized materialized views (e.g., PostgreSQL or Elasticsearch) optimized for UI rendering."
+
+  # ----------------------------------------------------------------------------
+  # 3. ORCHESTRATION & STATE MANAGEMENT
+  # ----------------------------------------------------------------------------
+  orchestration_and_state:
+    pattern: "Durable Execution / Saga Pattern"
+    long_running_cases:
+      description: "Tracks long-running workflow state, deadlines and cross-system dependencies[cite: 1]."
+      mechanism: "Workflows are represented as state machines that can pause for weeks waiting on asynchronous evidence, automatically waking up on SLA timeouts."
+    permission_checks:
+      description: "State machine halts at approval gates. Final liability and consequential case decisions remain human-owned[cite: 1]."
+
+  # ----------------------------------------------------------------------------
+  # 4. LATE EVIDENCE HANDLING (THE INJECT)
+  # ----------------------------------------------------------------------------
+  late_evidence_handling:
+    trigger_mechanism:
+      - "Webhook receives late material evidence from merchant[cite: 1]."
+      - "Command Service validates and appends `EVIDENCE_RECEIVED_LATE` event to the Event Store."
+    targeted_reevaluation:
+      - "Read Projector updates the Timeline."
+      - "Defeasible AI Engine subscribes to `EVIDENCE_RECEIVED_LATE`, fetching the new fact and the prior hypothesis."
+      - "AI Engine detects a conflict, appends `HYPOTHESIS_INVALIDATED` and `CONTRADICTION_DETECTED` events."
+    ui_reaction:
+      - "WebSocket pushes the contradiction event to the UI in real-time."
+      - "Saga Orchestrator cancels any pending automated refund timers, routing the case back to 'Human Review'."
+
+  # ----------------------------------------------------------------------------
+  # 5. RESILIENCE & PARTIAL FAILURE RECOVERY
+  # ----------------------------------------------------------------------------
+  resilience_and_recovery:
+    idempotency:
+      description: "Prevents duplicate requests, duplicate transactions or repeated external actions[cite: 1]."
+      implementation: "Every command includes a UUID `Idempotency-Key` header. Command Service caches keys (Redis) for 24 hours to silently drop duplicates."
+    retries_and_timeouts:
+      description: "Exponential backoff for transient failures in downstream API calls."
+    compensation_transactions:
+      description: "Coordinates safe recovery when only part of a workflow succeeds[cite: 1]."
+      implementation: "If a multi-step API process fails at step 3, the Saga executes compensation API calls for steps 1 and 2 to roll the system back to a consistent state."
+
+  # ----------------------------------------------------------------------------
+  # 6. OBSERVABILITY & AUDIT
+  # ----------------------------------------------------------------------------
+  observability:
+    distributed_tracing: "W3C Trace Context propagated across all microservices and LLM calls."
+    structured_logging: "JSON-formatted logs injected with `case_id`, `trace_id`, and `actor_id`."
+    metrics: "RED (Rate, Errors, Duration) metrics for APIs; Custom metrics for AI confidence scores and contradiction detection rates."
+    audit_events: "Cryptographically chained event logs explicitly separating recorded fact, AI inference, user input, automated action and human decision[cite: 1]."
+
+  # ----------------------------------------------------------------------------
+  # 7. CONFIGURATION & ACTION BOUNDARIES
+  # ----------------------------------------------------------------------------
+  configuration_and_boundaries:
+    dynamic_rule_engine:
+      description: "Support for configurable action boundaries so administrators can define automation thresholds[cite: 1]."
+    feature_flags:
+      description: "Targeted rollout of new AI specialist models or integration paths without redeploying."
+    boundary_enforcement:
+      description: "Middleware intercepts AI next-best-action outputs. If `action.financial_value > config.auto_approve_limit`, the payload is dynamically wrapped in an `ApprovalRequired` envelope."
+
+  # ----------------------------------------------------------------------------
+  # 8. SYNTHETIC DATA & MOCK EXTERNAL SYSTEMS
+  # ----------------------------------------------------------------------------
+  synthetic_data_strategy:
+    objective: "Behave as a deployable product using representative mock interfaces[cite: 1]."
+    data_generation:
+      - "Synthetic seed scripts generate realistic base state (past clean transactions, device fingerprints)."
+    mock_services:
+      - "WireMock/Mountebank spun up alongside the core services to simulate Visa VROL, Mastercard MasterCom, and Merchant Webhooks."
+      - "Mocks configured with stateful delays and engineered failure modes (e.g., HTTP 503) to demonstrate partial failure recovery."
+
+  # ----------------------------------------------------------------------------
+  # 9. DEPLOYMENT TOPOLOGY
+  # ----------------------------------------------------------------------------
+  deployment_topology:
+    environment: "Cloud-Agnostic Kubernetes (K8s) Cluster"
+    availability: "Multi-Availability Zone (Multi-AZ) deployment for high availability."
+    infrastructure_as_code: "Terraform / Helm charts defining exact compute, memory, and networking boundaries."
+    workload_isolation: "Heavy LLM context-parsing workloads deployed on separate node pools with autoscale-to-zero capabilities to manage compute costs."
+
+  # ----------------------------------------------------------------------------
+  # 10. TECHNOLOGY RECOMMENDATIONS
+  # ----------------------------------------------------------------------------
+  technology_recommendations:
+    api_and_services:
+      primary_language: "Go or Java/Spring Boot (Strong concurrency, strict typing, enterprise standard)."
+      alternative: "TypeScript/Node.js (Faster iteration for hackathon timeline)."
+    event_store:
+      recommendation: "EventStoreDB or Apache Kafka (Native append-only immutable semantics)."
+    read_database:
+      recommendation: "PostgreSQL (JSONB support for flexible read models)."
+    orchestration:
+      recommendation: "Temporal.io (Industry standard for durable, long-running Saga execution)."
+    ai_integration:
+      recommendation: "LangChain or LlamaIndex with a governed LLM gateway (Azure OpenAI / AWS Bedrock) to enforce strict schema outputs for the Defeasible AI Engine."

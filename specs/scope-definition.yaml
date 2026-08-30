@@ -1,0 +1,116 @@
+# ==============================================================================
+# File: scope-definition.yaml
+# Context: Enterprise Fintech Dispute Platform - Scope & Delivery Plan
+# Role: Principal Product Manager & Delivery Architect
+# ==============================================================================
+
+ScopeDefinition:
+  ProjectName: "Evidence Reconstruction & Resolution Agent"
+  Objective: "Reconstruct a trustworthy disputed event, expose gaps and contradictions, and recommend the next useful evidence or permitted case action[cite: 1]."
+
+  InScopeCapabilities:
+    - capability_1: "Assemble and reconcile customer statements, merchant records, transaction events, receipts, delivery records, authentication events and correspondence into a coherent, time-aware operating view[cite: 1]."
+    - capability_2: "Detect missing, stale, duplicated or contradictory information and make uncertainty explicit[cite: 1]."
+    - capability_3: "Dynamically select the next useful evidence, analysis, coordination or permitted action based on the current state and constraints[cite: 1]."
+    - capability_4: "Track long-running workflow state, deadlines and cross-system dependencies while preventing duplicate requests, duplicate transactions or repeated external actions[cite: 1]."
+    - capability_5: "Represent competing interpretations, plans or hypotheses and show which evidence supports, weakens or changes each option without hiding uncertainty[cite: 1]."
+    - capability_6: "Maintain versioned state with source-level provenance and explicit separation of recorded fact, AI inference, user input, automated action and human decision[cite: 1]."
+    - capability_7: "Coordinate approved tools or specialist AI components with permission checks, retries, timeouts, idempotency and safe recovery when only part of a workflow succeeds[cite: 1]."
+    - capability_8: "Handle the National Finale Inject where a merchant provides material evidence late, contradicting the customer’s original description[cite: 1]."
+    - capability_9: "When late evidence arrives, the solution must incorporate it, reassess dependent conclusions and make the change visible[cite: 1]."
+    
+  OutScopeItems:
+    - constraint_1: "Automated final liability execution: Final liability and consequential case decisions remain human-owned[cite: 1]."
+    - constraint_2: "Silent data updates: Material changes must trigger targeted re-evaluation rather than silently preserving an outdated conclusion[cite: 1]."
+    - constraint_3: "Live production data integration: No live confidential enterprise data is required; the system will use synthetic starter data[cite: 1]."
+    - constraint_4: "Fixed happy-path routing: The system must not rely on a fixed happy path for workflow progression[cite: 1]."
+
+  Personas:
+    Customer:
+      role: "Initiator of the claim (e.g., 'I didn't buy this' or 'Item not received')."
+      system_interaction: "Provides initial statements and correspondence."
+    Merchant:
+      role: "Counter-party defending the transaction."
+      system_interaction: "Submits fulfillment proofs and can asynchronously trigger the late-evidence inject."
+    Investigator:
+      role: "Tier 1 operations analyst."
+      system_interaction: "Reviews AI-gathered evidence and gap analysis."
+    SpecialistReviewer:
+      role: "Tier 2 dispute resolution expert."
+      system_interaction: "Authorizes the 'next-best action' and holds final liability decision power."
+    Compliance:
+      role: "Risk and regulatory governance."
+      system_interaction: "Utilizes the complete inspectable audit trail to verify provenance and AI hypotheses[cite: 1]."
+    SystemAdmin:
+      role: "Technical operations."
+      system_interaction: "Monitors idempotency, retries, timeouts, and safe recovery mechanisms[cite: 1]."
+
+  EndToEndJourneyMap:
+    Stage_01_DisputeRaised:
+      action: "System ingests initial customer claim and transaction payload."
+      decision_gate: "Verify network routing (Visa/Mastercard/UPI) and dispute category."
+    Stage_02_EvidenceGathered:
+      action: "Agent autonomously pulls internal bank logs and queries initial merchant APIs."
+    Stage_03_EventReconstructed:
+      action: "System builds the initial event timeline separating recorded fact from AI inference[cite: 1]."
+    Stage_04_NarrativesCompared:
+      action: "Agent maps customer statements against merchant records and authentication events[cite: 1]."
+    Stage_05_GapsIdentified:
+      action: "System detects missing or contradictory information and makes uncertainty explicit[cite: 1]."
+    Stage_06_EvidenceRequested:
+      action: "System dynamically selects and requests the next useful evidence from the required party[cite: 1]."
+    Stage_07_InterpretationPrepared:
+      action: "Agent represents competing hypotheses and shows which evidence supports or weakens each option[cite: 1]."
+    Stage_08_SpecialistReviewed:
+      action: "Human-in-the-loop gate."
+      decision_gate: "Specialist reviews the audit trail and approves the recommended action."
+    Stage_09_ResolutionProgressed:
+      action: "System executes the financial or network API call based on human approval."
+    Stage_10_NationalFinaleInject:
+      action: "Asynchronous Webhook/Event: A merchant provides material evidence late, contradicting the customer’s original description[cite: 1]."
+      re_evaluation_loop: "System halts Stage 09, routes back to Stage 04, incorporates new evidence, invalidates prior AI inference, and alerts the SpecialistReviewer[cite: 1]."
+
+  SuccessMetricsAndAcceptanceCriteria:
+    - stage: "Stages 01-03"
+      metric: "Ingestion Success Rate"
+      criteria: "100% of payloads parsed with explicit provenance, source system, and timestamps attached to every entity."
+    - stage: "Stages 04-07"
+      metric: "Contradiction Detection Accuracy"
+      criteria: "AI accurately flags 100% of synthetic conflicting narratives without silently overriding older data."
+    - stage: "Stage 08"
+      metric: "Auditability"
+      criteria: "Reviewers can reconstruct exactly what the system knew, why it acted, and what changed afterward[cite: 1]."
+    - stage: "Stage 10 (Inject)"
+      metric: "Defeasible Reasoning Resilience"
+      criteria: "System successfully reassesses dependent conclusions and makes the change visible without failing or duplicating states[cite: 1]."
+
+  DeliveryPlan3Day:
+    Strategy: "Build a production-ready, end-to-end working solution engineered for enterprise deployment using vertical slices[cite: 1]."
+    Data_Approach: "Use synthetic starter data and create representative edge cases, corrections, failure responses and approval states needed to demonstrate the complete solution[cite: 1]."
+    Integration_Approach: "Where live access is unavailable, use representative mock interfaces or simulated services, but ensure the solution behaves as a deployable product[cite: 1]."
+    Day_1_Foundation_and_State:
+      - "Develop the durable domain model supporting late, corrected, or conflicting versions[cite: 1]."
+      - "Build the event-sourced database schema."
+      - "Generate synthetic JSON data pairs (Customer Claim vs. Merchant Receipt)."
+    Day_2_Agentic_Core_and_Sagas:
+      - "Integrate the LLM/Contradiction Engine to compare competing interpretations[cite: 1]."
+      - "Implement idempotency keys, timeouts, and safe recovery logic for partial failures[cite: 1]."
+      - "Build the webhook endpoint to receive the 'National Finale Inject'[cite: 1]."
+    Day_3_Human_Gates_and_Demo_Prep:
+      - "Build the Specialist Reviewer UI showing explicit uncertainty and separation of AI inference vs. recorded fact[cite: 1]."
+      - "Hardcode a 'Simulate Partial Failure' button to prove recovery logic."
+      - "Rehearse the end-to-end journey, specifically triggering the late material evidence inject to show dynamic re-evaluation[cite: 1]."
+
+  RiskRegister:
+    - risk_id: "RSK-01"
+      category: "Data Integrity"
+      description: "Asynchronous late evidence silently overwrites the original customer claim."
+      mitigation: "Strict event-sourcing architecture. Mutations are appended as new events; earlier evidence is never lost[cite: 1]."
+    - risk_id: "RSK-02"
+      category: "System Resilience"
+      description: "Partial failure during a multi-step resolution API call results in duplicate refunds."
+      mitigation: "Implement Saga patterns with strict idempotency and safe recovery logic when only part of a workflow succeeds[cite: 1]."
+    - risk_id: "RSK-03"
+      category: "Compliance & Liability"
+      description: "Agent automatically executes a high-value financial reversal without human oversight."
+      mitigation: "Enforce role-based intervention and configurable action boundaries. Final liability remains human-owned[cite: 1]."

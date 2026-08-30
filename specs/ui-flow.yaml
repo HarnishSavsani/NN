@@ -1,0 +1,120 @@
+You are a senior product designer + domain expert in Indian banking & payments dispute systems (cards + UPI + IMPS/NEFT/RTGS + net banking). You deeply understand bank onboarding, white-label configuration, customer self-service dispute raising, multi-product transaction selection logic, and the operational needs of bank investigators and merchants.
+
+Produce a comprehensive, production-grade YAML package focused exclusively on user flows, personas, screen-level journeys, and configuration. Do not cut any of the flows or edge cases I list below. Cover every scenario exhaustively.
+
+### Required Output Files
+
+#### 1. personas-and-roles
+Define in detail:
+- Bank Administrator / Configurator
+- Bank Operations / Investigator / Case Handler
+- Customer (retail + possibly corporate)
+- Merchant / Merchant Operations
+- System / Automated Actor
+For each: goals, pain points, permissions, what they can see/do, and key success metrics.
+
+#### 2. bank-onboarding-and-configuration
+Full flow for a new bank registering and going live with the platform:
+- Bank registration / onboarding steps
+- Policy & consent checks (data sharing agreement, PCI, regulatory, privacy)
+- Legal / compliance acceptance gates
+- Then deep configuration capabilities that every bank can set independently so the product feels 100% native to that bank:
+  - Branding: logo, primary/secondary colors, font, theme (light/dark), favicon, email templates, SMS sender ID
+  - Product enablement: which dispute types are live (Debit Card, Credit Card, Net Banking, IMPS, NEFT, RTGS, UPI if in scope)
+  - Configurable parameters: SLA/expected closure days per dispute type, auto-assignment rules, approval thresholds, document types allowed, reason codes master list, amount limits, multi-card handling rules, etc.
+  - White-label embedding: how the bank can easily embed or deep-link the dispute experience into their own mobile app and internet banking (SDK / web-view / SSO / API-driven)
+  - Environment & security settings
+  - Testing / sandbox vs production switch
+Make the configuration model extremely flexible and bank-friendly.
+
+#### 3. customer-dispute-raising-flows
+Detailed, step-by-step user journeys for the customer (mobile + web, white-labelled).
+
+Cover ALL of the following exactly:
+
+A. Login / Authentication
+- Bank SSO / existing credentials / OTP / biometric where applicable
+- Session & multi-factor handling
+
+B. Product & Account Selection
+- Customer can raise disputes for: Debit Card, Credit Card, Net Banking, IMPS, NEFT, RTGS
+- Multi-card / multi-account handling (customer may have multiple debit cards, credit cards, accounts)
+- Clear selection UI for which card/account the dispute belongs to
+
+C. Transaction Selection Logic (critical – do not miss)
+- Credit Card: ability to select Billed vs Unbilled transactions. Show only relevant transactions. Clear labelling.
+- Debit Card / Net Banking / IMPS / NEFT / RTGS: date-range or period selection. If no transactions exist for the selected period/date → do NOT show “Raise Dispute” option. Instead show a clear empty state explaining that no eligible transactions are found.
+- Handle “no transaction found” gracefully across all channels.
+- Support searching / filtering transactions.
+- Prevent raising dispute on already disputed or ineligible transactions.
+
+D. Dispute Details Capture
+- Reason for dispute (configurable master list per product type – unauthorized, non-delivery, defective, excess charge, “I didn’t buy this”, merchant not responding, etc.)
+- Free-text description / issue details
+- Upload supporting documents (multiple files, type restrictions, size limits, preview)
+- Any additional structured fields the bank has configured
+
+E. Submission & Confirmation
+- Create unique Dispute ID
+- Immediate status screen showing:
+  - Issue Raised
+  - In Progress
+  - Expected Closure date (driven by bank-configured SLA)
+- Confirmation communication (in-app + email/SMS as configured)
+
+F. Post-submission Customer View
+- Dispute list (filterable by product type: CC, DC, IMPS, NEFT, RTGS, Net Banking)
+- Individual dispute detail with timeline, status history, uploaded documents, next expected action
+- Ability to add more information / documents later (if bank policy allows)
+- Multi-dispute management
+
+Include edge cases: partial form save, network failure on submit, duplicate prevention, large document handling, accessibility.
+
+#### 4. bank-operations-ui-and-flows
+This is critical – design the complete bank person (investigator / operations) experience because it is currently under-thought.
+
+Cover:
+- Work queue / case list (filters: product type, status, amount, SLA breach risk, priority, assigned to me / team)
+- Case detail workspace for a single dispute
+- Evidence timeline & reconciliation view
+- Customer narrative vs Merchant narrative side-by-side
+- Gap / contradiction detection panel
+- Ability to request additional evidence from customer or merchant
+- Internal notes, assignment, escalation, approval gates
+- Status transitions (with audit)
+- Handling of late-arriving merchant evidence and automatic / guided re-evaluation
+- Multi-card / multi-transaction cases
+- Bulk actions where safe
+- What the bank person sees differently for Credit Card vs Debit Card vs IMPS/NEFT/RTGS cases
+- Configurable dashboards and alerts (SLA, high-value, fraud signals)
+
+Make the UI calm, trustworthy, information-dense but not overwhelming. Describe screen layouts and key components.
+
+#### 5. merchant-flows-and-ui
+Full merchant experience:
+- How merchants are notified / invited into a case
+- What information they can see (limited, need-to-know)
+- How they upload evidence / respond
+- Status visibility from merchant side
+- Multi-case handling for large merchants
+- Any approval or confirmation steps
+
+#### 6. cross-cutting-flows
+- Status lifecycle for every dispute type (Raised → In Progress → Evidence Gathering → Under Review → Resolved / Closed / etc.) with expected closure dates
+- Notifications & communication matrix (who gets what, when, via which channel)
+- Document management & versioning
+- Audit trail visibility per role
+- Error, empty, loading, and partial-data states across all personas
+- Accessibility and localization considerations (important for Indian banks)
+
+#### 7. configuration-impact-matrix
+Show how each bank-configurable parameter (theme, logo, enabled products, reason codes, SLAs, document rules, etc.) affects the customer UI, bank UI, and merchant UI. This proves true white-label flexibility.
+
+### Research & Quality Instructions
+- Research real-world Indian bank dispute journeys (major banks’ mobile/net banking dispute flows) and global best practices for card dispute portals.
+- Ground every flow in actual operational reality (transaction availability windows, billed/unbilled credit card cycles, IMPS/NEFT/RTGS settlement timings, multi-card ownership).
+- Explicitly call out where the system must hide or disable “Raise Dispute” when no eligible transactions exist.
+- Design for high trust: every status, expected date, and evidence request must feel transparent and professional.
+- Assume the platform is white-labelled; the customer should feel they are inside their own bank’s app.
+
+Output pure, well-structured, heavily commented YAML only. Be exhaustive – do not omit any of the product types, selection logics, multi-card handling, or persona views I specified. This YAML will become the authoritative user-flow specification for the 3-day build and beyond.
