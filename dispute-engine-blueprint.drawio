@@ -1,0 +1,178 @@
+<mxfile host="app.diagrams.net" modified="2026-08-31T00:00:00.000Z" agent="claude" version="24.0.0" type="device">
+  <diagram id="flow" name="Dispute engine flow">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1250" pageHeight="1800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="ftitle" value="&lt;b&gt;Dispute engine — end-to-end flow&lt;/b&gt;&lt;br&gt;Coral-bordered boxes were missing from the whiteboard sketch" style="text;html=1;align=left;verticalAlign=middle;fontSize=18;fontColor=#1E2761;" vertex="1" parent="1">
+          <mxGeometry x="40" y="10" width="700" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- left rail -->
+        <mxCell id="clocks" value="&lt;b&gt;CLOCKS — ADDED&lt;/b&gt;&lt;br&gt;&lt;br&gt;Reg E — provisional credit in 10 business days; resolve in 45 / 90 days&lt;br&gt;&lt;br&gt;Card networks — per reason code, per lifecycle state&lt;br&gt;&lt;br&gt;RBI — turnaround time on domestic rails&lt;br&gt;&lt;br&gt;Internal SLA — per stage, per queue&lt;br&gt;&lt;br&gt;&lt;i&gt;Clocks run across every stage. A breach escalates before it happens, not after.&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F96167;strokeWidth=2;fontColor=#3A4470;align=left;spacing=10;fontSize=11;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="260" height="330" as="geometry" />
+        </mxCell>
+        <mxCell id="feedback" value="&lt;b&gt;FEEDBACK LOOP&lt;/b&gt;&lt;br&gt;&lt;br&gt;Reopen · Representment · Arbitration return the case to Investigation with its evidence intact.&lt;br&gt;&lt;br&gt;Every customer reply files against the open ask — nothing is retyped." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E2761;strokeColor=#1E2761;fontColor=#CADCFC;align=left;spacing=10;fontSize=11;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="440" width="260" height="180" as="geometry" />
+        </mxCell>
+
+        <!-- main flow -->
+        <mxCell id="actors" value="&lt;b&gt;Actors &amp;amp; channels&lt;/b&gt;&lt;br&gt;Customer · Merchant · Dispute manager · Ops · Auditor — via App · Web · Branch · Call centre · Email" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E2761;strokeColor=#1E2761;fontColor=#CADCFC;align=left;spacing=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="80" width="560" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="prevention" value="&lt;b&gt;Prevention gate — ADDED&lt;/b&gt;&lt;br&gt;Show the receipt first: &quot;Is this it?&quot; Confusion cases end here (40–45% in market data). The dispute button moves to second place." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F96167;strokeWidth=2;fontColor=#3A4470;align=left;spacing=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="190" width="560" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="generate" value="&lt;b&gt;Dispute generate&lt;/b&gt;&lt;br&gt;Customer evidence: date, amount, description, transaction id, invoice, image. Conversational intake files the story as structured evidence.&lt;br&gt;&lt;i&gt;ADDED: one case can cover many transactions — a recurring merchant, a stolen card.&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;align=left;spacing=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="310" width="560" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="abuse" value="&lt;b&gt;Abuse controls — ADDED&lt;/b&gt;&amp;nbsp;&amp;nbsp; duplicate case check · velocity limits · repeat-disputer flag" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F96167;strokeWidth=2;fontColor=#3A4470;align=left;spacing=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="450" width="560" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="reason" value="&lt;b&gt;Reason code &amp;amp; liability — ADDED&lt;/b&gt;&lt;br&gt;Map the story to a reason code — fraud (10.4) or service (13.1 / 13.3 / 12.6). Apply the 3DS liability shift. This step decides the deadlines, the permitted evidence, and who carries the loss." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F96167;strokeWidth=2;fontColor=#3A4470;align=left;spacing=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="540" width="560" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="matrix" value="&lt;b&gt;Investigation matrix&lt;/b&gt;&lt;br&gt;Level 1 — Customer + Bank&lt;br&gt;Level 2 — Customer + Bank + Merchant&lt;br&gt;Level 3 — Customer + Bank + Merchant + Network&lt;br&gt;&lt;i&gt;The party list per level comes from the domain pack, not from code.&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;align=left;spacing=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="670" width="560" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="d360" value="&lt;b&gt;Dispute 360° — event reconstruction&lt;/b&gt;&lt;br&gt;Authorisation, clearing, evidence and messages joined on one timeline. The dashboard updates as facts arrive." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;align=left;spacing=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="820" width="560" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="decision" value="&lt;b&gt;Decision&lt;/b&gt;&lt;br&gt;1. Rulebook check — scheme rules plugged in from the domain pack&lt;br&gt;2. Straight-through cases — inside approval thresholds, executed and logged&lt;br&gt;3. Scored cases — a confidence score with its basis on record&lt;br&gt;4. People decide the rest — maker-checker on every override" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;align=left;spacing=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="930" width="560" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="action" value="&lt;b&gt;Action&lt;/b&gt;&lt;br&gt;Smart assignment — queue, skills, capacity — routes the case to a dispute manager. Allowed straight-through cases execute directly, with the full trail kept." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;align=left;spacing=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1090" width="560" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="money" value="&lt;b&gt;Money movement — ADDED&lt;/b&gt;&lt;br&gt;Provisional credit in and out · write-off · recovery · ledger posting and reversal. Every movement runs once, is reconciled against the ledger, and can be traced." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F96167;strokeWidth=2;fontColor=#3A4470;align=left;spacing=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1210" width="560" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="letters" value="&lt;b&gt;Correspondence — ADDED&lt;/b&gt;&lt;br&gt;Written notices at the moments the law fixes (Reg E), merchant queries, closure letters. Templates come from the domain pack; every letter lands in the audit trail." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F96167;strokeWidth=2;fontColor=#3A4470;align=left;spacing=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1330" width="560" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="closure" value="&lt;b&gt;Resolution &amp;amp; closure&lt;/b&gt;&lt;br&gt;Gated close: evidence complete, clocks satisfied, approvals in place. The customer gets the answer in plain words, in their own view." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;align=left;spacing=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1450" width="560" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- state machine -->
+        <mxCell id="smtitle" value="&lt;b&gt;The network state machine — ADDED&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#1E2761;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1580" width="400" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="st1" value="Retrieval request" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1620" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="st2" value="First chargeback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="390" y="1620" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="st3" value="Representment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="1620" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="st4" value="Pre-arbitration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="1620" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="st5" value="Arbitration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="1620" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="smnote" value="Each state has its own clock, message format and permitted evidence. Other domains plug in their own state list — UDIR steps for UPI, claim stages for warranty and insurance." style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#3A4470;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1670" width="910" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- edges -->
+        <mxCell id="f1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="actors" target="prevention"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="f2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="prevention" target="generate"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="f3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="generate" target="abuse"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="f4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="abuse" target="reason"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="f5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="reason" target="matrix"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="f6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="matrix" target="d360"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="f7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="d360" target="decision"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="f8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="decision" target="action"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="f9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="action" target="money"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="f10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="money" target="letters"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="f11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="letters" target="closure"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="f12" value="reopen · representment · arbitration" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#F96167;strokeWidth=2;dashed=1;exitX=0;exitY=0.5;entryX=0;entryY=0.5;fontColor=#F96167;fontSize=10;" edge="1" parent="1" source="closure" target="matrix">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="340" y="1490" /><mxPoint x="340" y="725" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="st1" target="st2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="s2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="st2" target="st3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="s3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="st3" target="st4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="s4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="st4" target="st5"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="agents-layers" name="AI agents by layer">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="&lt;b&gt;Dispute engine — AI agents by layer&lt;/b&gt;&lt;br&gt;Blue = language-model agent · White = plain rules (not a model) · Coral = people" style="text;html=1;align=left;verticalAlign=middle;fontSize=18;fontColor=#1E2761;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="900" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lane1" value="Customer channel" style="swimlane;horizontal=0;html=1;startSize=36;fillColor=#F5F7FF;strokeColor=#1E2761;fontColor=#1E2761;fontSize=13;fontStyle=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="1250" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="intake" value="&lt;b&gt;Intake agent&lt;/b&gt; (LLM)&lt;br&gt;&lt;i&gt;Soul: a patient teller — never invents a fact&lt;/i&gt;&lt;br&gt;Skills: read the story · ask the missing fact · structured output&lt;br&gt;Task: turn &quot;I don&#39;t know this charge&quot; into date, amount, merchant, claim type" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;align=left;spacing=8;fontSize=11;" vertex="1" parent="lane1">
+          <mxGeometry x="60" y="30" width="360" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="statuschat" value="&lt;b&gt;Status chat agent&lt;/b&gt; (LLM)&lt;br&gt;&lt;i&gt;Soul: a plain-speaking clerk — answers only from the customer&#39;s own view&lt;/i&gt;&lt;br&gt;Skills: grounded answers · fixed stage words&lt;br&gt;Task: &quot;where is my case?&quot; without exposing bank-side notes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;align=left;spacing=8;fontSize=11;" vertex="1" parent="lane1">
+          <mxGeometry x="450" y="30" width="360" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="router" value="&lt;b&gt;Reply router&lt;/b&gt; — NOT A MODEL&lt;br&gt;A plain rule decides: questions go to the chat agent; statements file as evidence against the open ask." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3A4470;fontColor=#3A4470;align=left;spacing=8;fontSize=11;" vertex="1" parent="lane1">
+          <mxGeometry x="840" y="30" width="360" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lane2" value="Evidence" style="swimlane;horizontal=0;html=1;startSize=36;fillColor=#F5F7FF;strokeColor=#1E2761;fontColor=#1E2761;fontSize=13;fontStyle=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="300" width="1250" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="slipreader" value="&lt;b&gt;Slip reader agent&lt;/b&gt; (LLM)&lt;br&gt;&lt;i&gt;Soul: a forms clerk — reads what is there, flags what it cannot read&lt;/i&gt;&lt;br&gt;Skills: read slip images · structured fields&lt;br&gt;Task: merchant, date, amount, last four — into the evidence store" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;align=left;spacing=8;fontSize=11;" vertex="1" parent="lane2">
+          <mxGeometry x="60" y="30" width="360" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="matcher" value="&lt;b&gt;Tiered matcher&lt;/b&gt; — NOT A MODEL&lt;br&gt;Exact keys, tried in tiers. Attach only on a certain match; when unsure, attach nothing and ask a person." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3A4470;fontColor=#3A4470;align=left;spacing=8;fontSize=11;" vertex="1" parent="lane2">
+          <mxGeometry x="450" y="30" width="360" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ranker" value="&lt;b&gt;Evidence ranker&lt;/b&gt; — NOT A MODEL&lt;br&gt;Impact × supply × fit. Names the next best evidence and which party holds it." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3A4470;fontColor=#3A4470;align=left;spacing=8;fontSize=11;" vertex="1" parent="lane2">
+          <mxGeometry x="840" y="30" width="360" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lane3" value="Case work" style="swimlane;horizontal=0;html=1;startSize=36;fillColor=#F5F7FF;strokeColor=#1E2761;fontColor=#1E2761;fontSize=13;fontStyle=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="500" width="1250" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="planner" value="&lt;b&gt;Case planner agent&lt;/b&gt; (LLM)&lt;br&gt;&lt;i&gt;Soul: a senior case officer — states the next step and why, in writing&lt;/i&gt;&lt;br&gt;Skills: read the whole case · write the next step&lt;br&gt;Task: the rationale lands in the audit trail, capped and attributed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;align=left;spacing=8;fontSize=11;" vertex="1" parent="lane3">
+          <mxGeometry x="60" y="30" width="360" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="advocates" value="&lt;b&gt;Advocates — two agents&lt;/b&gt; (LLM)&lt;br&gt;&lt;i&gt;Soul: opposing counsel — one argues the bank&#39;s side, one the merchant&#39;s&lt;/i&gt;&lt;br&gt;Skills: argue both sides · cite the evidence&lt;br&gt;Task: a decision-ready dossier with both cases made, before a person rules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CADCFC;strokeColor=#1E2761;fontColor=#1E2761;align=left;spacing=8;fontSize=11;" vertex="1" parent="lane3">
+          <mxGeometry x="450" y="30" width="360" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lane4" value="Decision &amp; control" style="swimlane;horizontal=0;html=1;startSize=36;fillColor=#F5F7FF;strokeColor=#1E2761;fontColor=#1E2761;fontSize=13;fontStyle=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="700" width="1250" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="score" value="&lt;b&gt;Confidence score&lt;/b&gt; — NO LANGUAGE MODEL&lt;br&gt;A small statistical score with its basis on record; a fixed formula the auditor can re-run. Routes cases to straight-through or to people." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3A4470;fontColor=#3A4470;align=left;spacing=8;fontSize=11;" vertex="1" parent="lane4">
+          <mxGeometry x="60" y="30" width="360" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="makerchecker" value="&lt;b&gt;Maker-checker&lt;/b&gt; — PEOPLE&lt;br&gt;Four eyes on every approval, every override, every rulebook change. Agents propose; people confirm." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#F96167;strokeWidth=2;fontColor=#3A4470;align=left;spacing=8;fontSize=11;" vertex="1" parent="lane4">
+          <mxGeometry x="450" y="30" width="360" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="rulebook" value="&lt;b&gt;Domain rulebook&lt;/b&gt; — CONFIG&lt;br&gt;Scheme rules, clocks and thresholds as configuration from the domain pack. A rule release is a config change, not a deployment." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3A4470;fontColor=#3A4470;align=left;spacing=8;fontSize=11;" vertex="1" parent="lane4">
+          <mxGeometry x="840" y="30" width="360" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="guardrails" value="&lt;b&gt;Guardrails on every agent:&lt;/b&gt; every run is durable (queued · running · complete · refused · cancelled) — a refusal flags the case, nothing is silently dropped · instructions are content-stamped so the audit shows exactly what each agent was told · no model ever decides an attach or moves money · every AI-written sentence in a case file carries its basis." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E2761;strokeColor=#1E2761;fontColor=#CADCFC;align=left;spacing=12;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="900" width="1250" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="intake" target="matcher"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="slipreader" target="matcher"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="matcher" target="planner"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="planner" target="advocates"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="advocates" target="score"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="score" target="makerchecker"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e8" value="feeds the rulebook check" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9AA8D8;strokeWidth=2;dashed=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;fontColor=#3A4470;fontSize=10;" edge="1" parent="1" source="rulebook" target="makerchecker"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
